@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Import and use routes
-const userRoutes = require('./src/routes/userRoutes');
+const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
 
 // Default route
@@ -29,5 +29,8 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('MongoDB connected'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
-const authRoutes = require('./src/routes/authRoutes');
+const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
+
+const cors = require('cors');
+app.use(cors());
