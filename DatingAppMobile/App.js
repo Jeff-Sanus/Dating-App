@@ -1,3 +1,26 @@
+import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome to Dating App!</Text>
+      {/* Optional: add a logo image */}
+      <Image 
+        source={require('./assets/logo.png')} 
+        style={styles.logo} 
+        resizeMode="contain"
+      />
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Sign In</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Register</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
