@@ -1,6 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 
+import SignInScreen from './screens/SignInScreen';
+import RegisterScreen from './screens/RegisterScreen';
+
 export default function App() {
   return (
     <View style={styles.container}>
