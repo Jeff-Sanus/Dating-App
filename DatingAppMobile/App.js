@@ -6,10 +6,10 @@ export default function App() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Dating App!</Text>
       <Image 
-        source={require('DatingAppMobile/assets/aiLove.png')} 
-        style={styles.logo} 
-        resizeMode="contain"
-      />
+  source={require('./assets/aiLove.png')} 
+  style={styles.logo} 
+  resizeMode="contain"
+/>
       <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
