@@ -6,7 +6,7 @@ export default function App() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Dating App!</Text>
       <Image 
-        source={require('DatingAppMobile\assets\ai love.png')} 
+        source={require('DatingAppMobile/assets/aiLove.png')} 
         style={styles.logo} 
         resizeMode="contain"
       />
