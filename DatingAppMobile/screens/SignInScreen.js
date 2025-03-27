@@ -8,6 +8,7 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     try {
+        console.log('📲 Register button pressed!');
       const response = await fetch('http://192.168.1.119:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
