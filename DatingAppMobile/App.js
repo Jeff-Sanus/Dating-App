@@ -8,7 +8,7 @@ export default function App() {
       {/* Optional: add a logo image */}
       
       <Image 
-        source={require('C:\Users\rubio\OneDrive\Desktop\mycode\Dating-App\DatingAppMobile\assets\ai love.png')} 
+        source={require('.\assets\ai love.png')} 
         style={styles.logo} 
         resizeMode="contain"
       />
