@@ -6,6 +6,13 @@ export default function App() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Dating App!</Text>
       {/* Optional: add a logo image */}
+      
+      <Image 
+        source={require('C:\Users\rubio\OneDrive\Desktop\mycode\Dating-App\DatingAppMobile\assets\ai love.png')} 
+        style={styles.logo} 
+        resizeMode="contain"
+      />
+ 
     
       <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>Sign In</Text>
