@@ -1,11 +1,22 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Jeffrey is a boss</Text>
-      <StatusBar style="auto" />
+      <Text style={styles.title}>Welcome to Dating App!</Text>
+      {/* Optional: add a logo image */}
+      <Image 
+        source={require('./assets/logo.png')} 
+        style={styles.logo} 
+        resizeMode="contain"
+      />
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Sign In</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Register</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -15,6 +26,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
-});
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20
+  },
+  button: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 5,
+    width: '80%',
+    alignItems: 'center'
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18
