@@ -11,24 +11,6 @@ import HomeScreen from './screens/HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
-function HomeScreen({ navigation }) {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Dating App!</Text>
-      <Image 
-        source={require('./assets/aiLove.png')} 
-        style={styles.logo} 
-        resizeMode="contain"
-      />
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SignIn')}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
 
 export default function App() {
   return (
