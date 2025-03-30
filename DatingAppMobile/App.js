@@ -77,5 +77,3 @@ const styles = StyleSheet.create({
     fontSize: 18
   }
 });
-
-import Toast from 'react-native-toast-message';
