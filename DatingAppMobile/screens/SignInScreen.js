@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TextInput, Button, Title } from 'react-native-paper';
@@ -13,6 +15,40 @@ export default function SignInScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('✅ Logged in:', data.token);
+        
+        await AsyncStorage.setItem('token', data.token); // Save token
+  
+        Toast.show({
+          type: 'success',
+          text1: 'Login successful!',
+          position: 'bottom'
+        });
+  
+        // Navigate to ProfileScreen (next step)
+        navigation.navigate('Profile');
+  
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Login failed',
+          text2: data.error,
+          position: 'bottom'
+        });
+      }
+    } catch (err) {
+      Toast.show({
+        type: 'error',
+        text1: 'Network error',
+        text2: err.message,
+        position: 'bottom'
+      });
+    }
+  };
 
       const data = await response.json();
 

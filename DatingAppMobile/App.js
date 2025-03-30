@@ -1,3 +1,4 @@
+import ProfileScreen from './screens/ProfileScreen';
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -38,7 +39,9 @@ export default function App() {
         />
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 }
@@ -73,3 +76,5 @@ const styles = StyleSheet.create({
     fontSize: 18
   }
 });
+
+import Toast from 'react-native-toast-message';
