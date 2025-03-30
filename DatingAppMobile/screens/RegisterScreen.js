@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TextInput, Button, Title } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
 
-export default function RegisterScreen() {
+export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,11 +20,14 @@ export default function RegisterScreen() {
 
       if (response.ok) {
         console.log('✅ Registration successful:', data.message);
+        Toast.show({ type: 'success', text1: 'Registration successful!', position: 'bottom' });
+        // Navigate to Profile screen upon successful registration
+        navigation.navigate('Profile');
       } else {
-        console.warn('❌ Registration failed:', data.error);
+        Toast.show({ type: 'error', text1: 'Registration failed', text2: data.error, position: 'bottom' });
       }
     } catch (err) {
-      console.error('⚠️ Network error:', err.message);
+      Toast.show({ type: 'error', text1: 'Network error', text2: err.message, position: 'bottom' });
     }
   };
 
@@ -56,6 +60,7 @@ export default function RegisterScreen() {
       <Button mode="contained" onPress={handleRegister} style={styles.button}>
         Create Account
       </Button>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
   );
 }
