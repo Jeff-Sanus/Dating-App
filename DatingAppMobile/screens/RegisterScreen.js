@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, Title } from 'react-native-paper';
+import { TextInput, Button, Title } from 'react-native-paper';
 
 export default function RegisterScreen() {
   const [username, setUsername] = useState('');
@@ -9,14 +9,14 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     try {
-        const response = await fetch('http://192.168.1.119:3000/api/auth/register', {
+      const response = await fetch('http://192.168.1.119:3000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         console.log('✅ Registration successful:', data.message);
       } else {
@@ -26,7 +26,6 @@ export default function RegisterScreen() {
       console.error('⚠️ Network error:', err.message);
     }
   };
-  
 
   return (
     <View style={styles.container}>

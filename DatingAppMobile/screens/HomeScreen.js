@@ -1,19 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
-import SignInScreen from './screens/SignInScreen';
-import RegisterScreen from './screens/RegisterScreen';
-
-const Stack = createNativeStackNavigator();
-
-function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Dating App!</Text>
       <Image 
-        source={require('./assets/aiLove.png')} 
+        source={require('../assets/aiLove.png')} 
         style={styles.logo} 
         resizeMode="contain"
       />
@@ -24,22 +17,6 @@ function HomeScreen({ navigation }) {
         <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
     </View>
-  );
-}
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen}
-          options={{ headerShown: false }} // hides top bar on welcome
-        />
-        <Stack.Screen name="SignIn" component={SignInScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
   );
 }
 

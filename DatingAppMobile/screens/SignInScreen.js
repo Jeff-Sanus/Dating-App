@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, Title } from 'react-native-paper';
+import { TextInput, Button, Title } from 'react-native-paper';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -8,7 +8,6 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     try {
-        console.log('📲 Register button pressed!');
       const response = await fetch('http://192.168.1.119:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -18,8 +17,8 @@ export default function SignInScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('✅ Login successful! Token:', data.token);
-        // TODO: Save token with AsyncStorage or navigate to the next screen
+        console.log('✅ Logged in:', data.token);
+        // Store token and navigate, etc.
       } else {
         console.warn('❌ Login failed:', data.error);
       }
@@ -37,8 +36,6 @@ export default function SignInScreen() {
         onChangeText={setEmail}
         mode="outlined"
         style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
       />
       <TextInput
         label="Password"
