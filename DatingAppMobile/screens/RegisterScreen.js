@@ -3,6 +3,16 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Helper function: fetch with timeout
+const fetchWithTimeout = (url, options, timeout = 10000) => {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), timeout)
+    )
+  ]);
+};
+
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -14,11 +24,11 @@ export default function RegisterScreen({ navigation }) {
     console.log('handleRegister triggered');
     try {
       console.log('Registering with:', { username, email, password });
-      const response = await fetch('http://192.168.1.119:3000/auth/signup', {
+      const response = await fetchWithTimeout('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
-      });
+      }, 10000); // 10-second timeout
       
       console.log('Fetch response status:', response.status);
       
@@ -31,7 +41,6 @@ export default function RegisterScreen({ navigation }) {
       console.log('Response data:', data);
       console.log('Registration success:', data);
 
-      // If a token is returned, store it and navigate to Profile
       if (data.token) {
         console.log('Received token:', data.token);
         await AsyncStorage.setItem('token', data.token);
@@ -84,7 +93,7 @@ export default function RegisterScreen({ navigation }) {
           {loading ? 'Registering...' : 'Sign Up'}
         </Text>
       </TouchableOpacity>
-      {/* Optional: Test navigation directly */}
+      {/* Test button for manual navigation */}
       <TouchableOpacity
         style={[styles.button, { backgroundColor: '#28a745' }]}
         onPress={() => navigation.navigate('Profile')}
