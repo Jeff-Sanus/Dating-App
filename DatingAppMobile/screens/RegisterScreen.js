@@ -7,8 +7,10 @@ export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    setLoading(true);
     console.log('handleRegister triggered');
     try {
       console.log('Registering with:', { username, email, password });
@@ -29,11 +31,15 @@ export default function RegisterScreen({ navigation }) {
       console.log('Response data:', data);
       console.log('Registration success:', data);
 
-      // Check if token is part of the response
+      // If a token is returned, store it and navigate to Profile
       if (data.token) {
         console.log('Received token:', data.token);
         await AsyncStorage.setItem('token', data.token);
+        const storedToken = await AsyncStorage.getItem('token');
+        console.log('Stored token:', storedToken);
+        console.log('Navigating to Profile');
         navigation.navigate('Profile');
+        console.log('Navigation called');
       } else {
         console.error('No token received');
         Alert.alert('Error', 'No token received from server.');
@@ -41,6 +47,8 @@ export default function RegisterScreen({ navigation }) {
     } catch (error) {
       console.error('Error during registration:', error);
       Alert.alert('Registration Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,8 +75,21 @@ export default function RegisterScreen({ navigation }) {
         value={password}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Registering...' : 'Sign Up'}
+        </Text>
+      </TouchableOpacity>
+      {/* Optional: Test navigation directly */}
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: '#28a745' }]}
+        onPress={() => navigation.navigate('Profile')}
+      >
+        <Text style={styles.buttonText}>Test Navigate to Profile</Text>
       </TouchableOpacity>
     </View>
   );
@@ -96,7 +117,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     padding: 15,
     borderRadius: 5,
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: 10
   },
   buttonText: { 
     color: '#fff', 

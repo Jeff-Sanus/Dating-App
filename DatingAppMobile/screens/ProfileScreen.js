@@ -1,3 +1,4 @@
+// screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,13 +10,12 @@ export default function ProfileScreen() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('token');
+        console.log('Token in ProfileScreen:', token);
         if (!token) {
           throw new Error('No token found. Please log in.');
         }
 
-        // Make the GET request to /auth/profile with the token in the Authorization header
         const response = await fetch('http://192.168.1.119:3000/auth/profile', {
           method: 'GET',
           headers: {
@@ -24,12 +24,14 @@ export default function ProfileScreen() {
           }
         });
 
+        console.log('Profile fetch response status:', response.status);
+
         if (!response.ok) {
           throw new Error('Failed to fetch profile');
         }
         
-        // Parse the JSON response
         const data = await response.json();
+        console.log('Profile data:', data);
         setProfile(data);
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -37,7 +39,6 @@ export default function ProfileScreen() {
         setLoading(false);
       }
     }
-
     fetchProfile();
   }, []);
 
