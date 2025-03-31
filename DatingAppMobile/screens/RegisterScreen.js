@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // New email field
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
@@ -12,7 +13,7 @@ export default function RegisterScreen({ navigation }) {
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, email, password }) // include email in payload
       });
 
       if (!response.ok) {
@@ -22,7 +23,7 @@ export default function RegisterScreen({ navigation }) {
       const data = await response.json();
       console.log('Registration success:', data);
 
-      // Optionally, store token if returned by backend:
+      // Optionally, store token if your backend returns one:
       // await AsyncStorage.setItem('token', data.token);
 
       // Navigate to Profile screen upon successful registration
@@ -40,6 +41,13 @@ export default function RegisterScreen({ navigation }) {
         placeholder="Username"
         onChangeText={setUsername}
         value={username}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        onChangeText={setEmail}
+        value={email}
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
@@ -68,19 +76,4 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1, 
-    borderColor: '#ccc', 
-    padding: 10, 
-    marginBottom: 15, 
-    borderRadius: 5
-  },
-  button: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center'  // Corrected this property
-  },
-  buttonText: { 
-    color: '#fff', 
-    fontSize: 16 
-  }
-});
+    borderColor: '#ccc',
