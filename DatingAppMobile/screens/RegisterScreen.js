@@ -1,6 +1,6 @@
 // screens/RegisterScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
@@ -21,7 +21,8 @@ export default function RegisterScreen({ navigation }) {
       console.log('Fetch response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
       }
 
       const data = await response.json();
@@ -35,9 +36,11 @@ export default function RegisterScreen({ navigation }) {
         navigation.navigate('Profile');
       } else {
         console.error('No token received');
+        Alert.alert('Error', 'No token received from server.');
       }
     } catch (error) {
       console.error('Error during registration:', error);
+      Alert.alert('Registration Error', error.message);
     }
   };
 
