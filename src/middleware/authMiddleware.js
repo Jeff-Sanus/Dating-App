@@ -4,11 +4,8 @@ const jwt = require('jsonwebtoken');
 exports.protect = (req, res, next) => {
   let token;
   
-  // Check for token in Authorization header in the format "Bearer token"
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  // Look for token in the Authorization header (format: "Bearer <token>")
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
   
@@ -18,7 +15,7 @@ exports.protect = (req, res, next) => {
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Attach user information to request object; adjust as needed
+    // Attach decoded user info (e.g., user ID) to the request
     req.user = { id: decoded.id };
     next();
   } catch (error) {
