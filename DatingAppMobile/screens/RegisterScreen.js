@@ -9,6 +9,7 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
+    console.log('handleRegister triggered');
     try {
       console.log('handleRegister triggered'); 
       console.log('Registering with:', { username, email, password });
