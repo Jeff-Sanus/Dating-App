@@ -23,6 +23,7 @@ export default function RegisterScreen({ navigation }) {
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
       console.log('Registration success:', data); // Check the full response here
 
       // Check if token is part of the response
