@@ -11,21 +11,22 @@ export default function RegisterScreen({ navigation }) {
   const handleRegister = async () => {
     console.log('handleRegister triggered');
     try {
-      console.log('handleRegister triggered'); 
       console.log('Registering with:', { username, email, password });
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
       });
-
+      
+      console.log('Fetch response status:', response.status);
+      
       if (!response.ok) {
         throw new Error('Registration failed');
       }
 
       const data = await response.json();
       console.log('Response data:', data);
-      console.log('Registration success:', data); // Check the full response here
+      console.log('Registration success:', data);
 
       // Check if token is part of the response
       if (data.token) {
