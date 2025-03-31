@@ -1,4 +1,3 @@
-// App.js
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -14,12 +13,12 @@ export default function App() {
         <Stack.Screen 
           name="Register" 
           component={RegisterScreen} 
-          options={{ title: 'Register' }}
+          options={{ title: 'Register' }} 
         />
         <Stack.Screen 
           name="Profile" 
           component={ProfileScreen} 
-          options={{ title: 'Profile' }}
+          options={{ title: 'Profile' }} 
         />
       </Stack.Navigator>
     </NavigationContainer>

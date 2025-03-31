@@ -1,53 +1,22 @@
 // screens/RegisterScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    setLoading(true);
+  useEffect(() => {
+    console.log('Navigation prop in RegisterScreen:', navigation);
+  }, [navigation]);
+
+  // For testing, this handler simply navigates to Profile
+  const handleRegister = () => {
     console.log('handleRegister triggered');
-    try {
-      console.log('Registering with:', { username, email, password });
-      const response = await fetch('http://192.168.1.119:3000/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
-      });
-      
-      console.log('Fetch response status:', response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
-      }
-
-      const data = await response.json();
-      console.log('Response data:', data);
-      console.log('Registration success:', data);
-
-      // For testing, navigate to Profile regardless of token presence.
-      // Optionally, store token if it exists.
-      if (data.token) {
-        console.log('Received token:', data.token);
-        await AsyncStorage.setItem('token', data.token);
-      } else {
-        console.warn('No token received, proceeding with navigation for testing.');
-      }
-      console.log('Navigating to Profile');
-      navigation.navigate('Profile');
-      console.log('Navigation called');
-    } catch (error) {
-      console.error('Error during registration:', error);
-      Alert.alert('Registration Error', error.message);
-    } finally {
-      setLoading(false);
-    }
+    // For now, bypass registration logic and navigate directly
+    navigation.navigate('Profile');
+    console.log('Navigation called');
   };
 
   return (
@@ -56,36 +25,33 @@ export default function RegisterScreen({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Username"
-        onChangeText={setUsername}
         value={username}
+        onChangeText={setUsername}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
-        onChangeText={setEmail}
         value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
-        onChangeText={setPassword}
         value={password}
+        onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Registering...' : 'Sign Up'}
-        </Text>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Sign Up (Test Navigate)</Text>
       </TouchableOpacity>
-      {/* Test button for manual navigation */}
+      {/* Direct test button */}
       <TouchableOpacity
         style={[styles.button, { backgroundColor: '#28a745' }]}
-        onPress={() => navigation.navigate('Profile')}
+        onPress={() => {
+          console.log('Test button pressed, navigating to Profile');
+          navigation.navigate('Profile');
+        }}
       >
         <Text style={styles.buttonText}>Test Navigate to Profile</Text>
       </TouchableOpacity>
