@@ -1,5 +1,6 @@
 // src/controllers/authController.js
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
 // POST /auth/signup
 exports.signup = async (req, res) => {
@@ -10,12 +11,12 @@ exports.signup = async (req, res) => {
     const newUser = new User({ username, email, password });
     await newUser.save();
 
-    // Optionally create a token (JWT) for the user
-    // const token = ...
+    // Generate a token (ensure you have a JWT_SECRET in your environment variables)
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     return res.status(201).json({
       message: 'Signup successful',
-      // token, // if you generated a JWT
+      token, // now returning the token
     });
   } catch (error) {
     console.error('Signup error:', error);
