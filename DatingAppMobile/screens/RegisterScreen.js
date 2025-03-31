@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(''); // New email field
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
@@ -13,7 +13,7 @@ export default function RegisterScreen({ navigation }) {
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }) // include email in payload
+        body: JSON.stringify({ username, email, password })
       });
 
       if (!response.ok) {
@@ -21,13 +21,16 @@ export default function RegisterScreen({ navigation }) {
       }
 
       const data = await response.json();
-      console.log('Registration success:', data);
+      console.log('Registration success:', data); // Check the full response here
 
-      // Optionally, store token if your backend returns one:
-      // await AsyncStorage.setItem('token', data.token);
-
-      // Navigate to Profile screen upon successful registration
-      navigation.navigate('Profile');
+      // Check if token is part of the response
+      if (data.token) {
+        console.log('Received token:', data.token);
+        await AsyncStorage.setItem('token', data.token);
+        navigation.navigate('Profile');
+      } else {
+        console.error('No token received');
+      }
     } catch (error) {
       console.error('Error during registration:', error);
     }
