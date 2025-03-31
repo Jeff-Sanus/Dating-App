@@ -75,3 +75,12 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center'  // Corrected this property
+  },
+  buttonText: { 
+    color: '#fff', 
+    fontSize: 16 
+  }
+});
