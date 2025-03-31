@@ -1,8 +1,7 @@
 // screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import './Profile.css';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
@@ -46,7 +45,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#007bff" />
         <Text>Loading profile...</Text>
       </View>
     );
@@ -55,7 +54,17 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       {profile ? (
-        <Text style={styles.header}>Welcome, {profile.username}!</Text>
+        <>
+          <Text style={styles.header}>Welcome, {profile.username}!</Text>
+          <Text style={styles.email}>{profile.email}</Text>
+          {/* Optionally add a profile image or more details */}
+          {profile.profilePic && (
+            <Image
+              source={{ uri: profile.profilePic }}
+              style={styles.profileImage}
+            />
+          )}
+        </>
       ) : (
         <Text>No profile data found.</Text>
       )}
@@ -64,7 +73,33 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 24 }
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: '#fff',
+    padding: 20
+  },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  header: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    marginBottom: 10 
+  },
+  email: { 
+    fontSize: 16, 
+    color: '#666',
+    marginBottom: 20
+  },
+  profileImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 4,
+    borderColor: '#007bff'
+  }
 });
