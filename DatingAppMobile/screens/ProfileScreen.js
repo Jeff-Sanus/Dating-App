@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import './Profile.css';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
