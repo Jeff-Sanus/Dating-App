@@ -76,4 +76,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1, 
-    borderColor: '#ccc',
+    borderColor: '#ccc', 
+    padding: 10, 
+    marginBottom: 15, 
+    borderRadius: 5
+  },
+  button: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center'
+  },
+  buttonText: { 
+    color: '#fff', 
+    fontSize: 16 
+  }
+});
