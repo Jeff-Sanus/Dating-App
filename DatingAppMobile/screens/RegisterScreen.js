@@ -3,16 +3,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Helper function: fetch with timeout
-const fetchWithTimeout = (url, options, timeout = 10000) => {
-  return Promise.race([
-    fetch(url, options),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), timeout)
-    )
-  ]);
-};
-
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -24,11 +14,11 @@ export default function RegisterScreen({ navigation }) {
     console.log('handleRegister triggered');
     try {
       console.log('Registering with:', { username, email, password });
-      const response = await fetchWithTimeout('http://192.168.1.119:3000/auth/signup', {
+      const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
-      }, 10000); // 10-second timeout
+      });
       
       console.log('Fetch response status:', response.status);
       
@@ -41,18 +31,17 @@ export default function RegisterScreen({ navigation }) {
       console.log('Response data:', data);
       console.log('Registration success:', data);
 
+      // For testing, navigate to Profile regardless of token presence.
+      // Optionally, store token if it exists.
       if (data.token) {
         console.log('Received token:', data.token);
         await AsyncStorage.setItem('token', data.token);
-        const storedToken = await AsyncStorage.getItem('token');
-        console.log('Stored token:', storedToken);
-        console.log('Navigating to Profile');
-        navigation.navigate('Profile');
-        console.log('Navigation called');
       } else {
-        console.error('No token received');
-        Alert.alert('Error', 'No token received from server.');
+        console.warn('No token received, proceeding with navigation for testing.');
       }
+      console.log('Navigating to Profile');
+      navigation.navigate('Profile');
+      console.log('Navigation called');
     } catch (error) {
       console.error('Error during registration:', error);
       Alert.alert('Registration Error', error.message);
