@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -7,6 +7,7 @@ export default function ProfileScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [profilePic, setProfilePic] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadProfile() {
@@ -14,12 +15,27 @@ export default function ProfileScreen({ navigation }) {
         const token = await AsyncStorage.getItem('token');
         console.log('Token:', token);
         if (token) {
-          // Dummy data; replace with API call if needed.
-          setUsername('JohnDoe');
-          setEmail('johndoe@example.com');
+          // Fetch the profile details from your backend
+          const response = await fetch('http://localhost:3000/api/auth/profile', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!response.ok) {
+            throw new Error('Failed to fetch profile');
+          }
+          const data = await response.json();
+          // Assuming your API returns data with username, email, and profilePicUrl
+          setUsername(data.username || '');
+          setEmail(data.email || '');
+          setProfilePic(data.profilePicUrl || null);
         }
       } catch (error) {
         console.error('Error loading profile:', error);
+      } finally {
+        setLoading(false);
       }
     }
     loadProfile();
@@ -49,8 +65,35 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handleSaveProfile = async () => {
-    console.log('Saving profile', { username, email, profilePic });
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username, email, profilePic })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      const data = await response.json();
+      console.log('Profile updated successfully:', data);
+      // Optionally show a success message or update state accordingly
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text>Loading profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
