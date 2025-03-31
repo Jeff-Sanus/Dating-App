@@ -6,19 +6,29 @@ const jwt = require('jsonwebtoken');
 exports.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    // Validate input (e.g., check if email is already used)
-    // Create and save the user in the database
+    
+    // Check if a user with this email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email is already registered.' });
+    }
+    
+    // Create a new user and save it to the database
     const newUser = new User({ username, email, password });
     await newUser.save();
-
-    // Generate a token (ensure you have a JWT_SECRET in your environment variables)
+    
+    // Generate a token (ensure you have JWT_SECRET in your .env file)
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+    
     return res.status(201).json({
       message: 'Signup successful',
-      token, // now returning the token
+      token,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      // Duplicate key error
+      return res.status(400).json({ error: 'Email is already registered.' });
+    }
     console.error('Signup error:', error);
     return res.status(500).json({ error: 'Server error during signup' });
   }
@@ -27,15 +37,12 @@ exports.signup = async (req, res) => {
 // GET /auth/profile
 exports.getProfile = async (req, res) => {
   try {
-    // If using JWT, you'd extract the user ID from the token (e.g., req.user.id)
-    // For now, assume a user ID is in req.user
+    // Assuming a middleware populates req.user with the authenticated user's info
     const userId = req.user.id;
-
     const user = await User.findById(userId).select('-password'); // exclude password
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
     return res.json(user);
   } catch (error) {
     console.error('Get profile error:', error);
@@ -46,9 +53,10 @@ exports.getProfile = async (req, res) => {
 // PUT /auth/profile
 exports.updateProfile = async (req, res) => {
   try {
+    // Assuming req.user contains the authenticated user's ID
     const userId = req.user.id;
     const { username, email, profilePic } = req.body;
-
+    
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { username, email, profilePic },
@@ -58,7 +66,6 @@ exports.updateProfile = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
     }
-
     return res.json({
       message: 'Profile updated successfully',
       user: updatedUser
