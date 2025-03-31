@@ -10,6 +10,8 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     try {
+      console.log('handleRegister triggered'); 
+      console.log('Registering with:', { username, email, password });
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
