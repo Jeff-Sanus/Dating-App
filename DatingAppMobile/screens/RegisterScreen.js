@@ -34,10 +34,12 @@ export default function RegisterScreen({ navigation }) {
       if (data.token) {
         console.log('Received token:', data.token);
         await AsyncStorage.setItem('token', data.token);
-        console.log('Token saved, navigating to Profile');
+        console.log('Token saved');
       } else {
         console.warn('No token received; proceeding to navigate for testing purposes');
       }
+      
+      console.log('Navigating to Profile');
       navigation.navigate('Profile');
       console.log('Navigation called');
     } catch (error) {
