@@ -22,10 +22,10 @@ export default function RegisterScreen({ navigation }) {
       const data = await response.json();
       console.log('Registration success:', data);
 
-      // Optionally, if your backend returns a token, store it:
+      // Optionally, store token if returned by backend:
       // await AsyncStorage.setItem('token', data.token);
 
-      // Navigate to the Profile screen upon successful registration
+      // Navigate to Profile screen upon successful registration
       navigation.navigate('Profile');
     } catch (error) {
       console.error('Error during registration:', error);
@@ -56,17 +56,22 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  header: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    justifyContent: 'center' 
+  },
+  header: { 
+    fontSize: 24, 
+    marginBottom: 20, 
+    textAlign: 'center' 
+  },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 15,
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    padding: 10, 
+    marginBottom: 15, 
     borderRadius: 5
   },
   button: {
     backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
-    align
