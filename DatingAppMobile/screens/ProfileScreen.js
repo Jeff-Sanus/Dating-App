@@ -1,6 +1,6 @@
 // screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -13,13 +13,9 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     async function fetchProfile() {
-      console.log('[ProfileScreen] fetchProfile triggered');
       try {
         const token = await AsyncStorage.getItem('token');
-        console.log('[ProfileScreen] Retrieved token:', token);
-        if (!token) {
-          throw new Error('No token found. Please log in.');
-        }
+        if (!token) throw new Error('No token found. Please log in.');
 
         const response = await fetch('http://192.168.1.119:3000/auth/profile', {
           method: 'GET',
@@ -28,19 +24,17 @@ export default function ProfileScreen() {
             'Authorization': `Bearer ${token}`
           }
         });
-        console.log('[ProfileScreen] Fetch response status:', response.status);
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('[ProfileScreen] Error response from server:', errorData);
+          console.error('Error response from server:', errorData);
           throw new Error('Failed to fetch profile');
         }
         
         const data = await response.json();
-        console.log('[ProfileScreen] Profile data received:', data);
         setProfile(data);
       } catch (error) {
-        console.error('[ProfileScreen] Error fetching profile:', error);
+        console.error('Error fetching profile:', error);
       } finally {
         setLoading(false);
       }
@@ -49,25 +43,33 @@ export default function ProfileScreen() {
   }, []);
 
   const selectImage = async () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 0.8,
-    };
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        console.error('ImagePicker Error: ', response.errorMessage);
-        Alert.alert('Error', 'An error occurred while selecting the image.');
-      } else if (response.assets && response.assets.length > 0) {
-        const asset = response.assets[0];
-        console.log('Selected image asset:', asset);
-        setSelectedImage(asset);
+    console.log("Select Image button pressed");
+    if (Platform.OS !== 'web') {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert("Permission required", "Permission to access the media library is required!");
+        return;
       }
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
     });
+
+    // Check for the new API response
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      console.log('Selected image asset:', result.assets[0]);
+      setSelectedImage(result.assets[0]);
+    } else {
+      console.log("Image selection was canceled.");
+    }
   };
 
   const uploadImage = async () => {
+    console.log("Upload Image button pressed");
     if (!selectedImage) {
       Alert.alert('No Image Selected', 'Please select an image first.');
       return;
@@ -75,14 +77,18 @@ export default function ProfileScreen() {
     setUploadLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found. Please log in.');
-      }
+      if (!token) throw new Error('No token found. Please log in.');
+
+      const localUri = selectedImage.uri;
+      const filename = localUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : `image`;
+
       const formData = new FormData();
       formData.append('profilePicture', {
-        uri: selectedImage.uri,
-        name: selectedImage.fileName || `profile_${Date.now()}.jpg`,
-        type: selectedImage.type || 'image/jpeg'
+        uri: localUri,
+        name: filename,
+        type,
       });
 
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
@@ -93,13 +99,13 @@ export default function ProfileScreen() {
         },
         body: formData,
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error uploading image:', errorData);
         setUploadMessage('Error uploading profile picture.');
       } else {
         setUploadMessage('Profile picture uploaded successfully!');
-        // Optionally update the profile to show the new image
         const updatedProfile = await response.json();
         setProfile(updatedProfile);
       }
