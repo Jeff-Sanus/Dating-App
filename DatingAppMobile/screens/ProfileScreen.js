@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
