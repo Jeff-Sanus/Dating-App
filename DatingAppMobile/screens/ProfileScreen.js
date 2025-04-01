@@ -25,13 +25,14 @@ export default function ProfileScreen() {
         });
 
         console.log('Profile fetch response status:', response.status);
-
         if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error response from server:', errorData);
           throw new Error('Failed to fetch profile');
         }
         
         const data = await response.json();
-        console.log('Profile data:', data);
+        console.log('Profile data received:', data);
         setProfile(data);
       } catch (error) {
         console.error('Error fetching profile:', error);
