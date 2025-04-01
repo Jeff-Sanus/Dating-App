@@ -9,9 +9,10 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     async function fetchProfile() {
+      console.log('[ProfileScreen] fetchProfile triggered');
       try {
         const token = await AsyncStorage.getItem('token');
-        console.log('Token in ProfileScreen:', token);
+        console.log('[ProfileScreen] Retrieved token:', token);
         if (!token) {
           throw new Error('No token found. Please log in.');
         }
@@ -23,19 +24,19 @@ export default function ProfileScreen() {
             'Authorization': `Bearer ${token}`
           }
         });
+        console.log('[ProfileScreen] Fetch response status:', response.status);
 
-        console.log('Profile fetch response status:', response.status);
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Error response from server:', errorData);
+          console.error('[ProfileScreen] Error response from server:', errorData);
           throw new Error('Failed to fetch profile');
         }
         
         const data = await response.json();
-        console.log('Profile data received:', data);
+        console.log('[ProfileScreen] Profile data received:', data);
         setProfile(data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('[ProfileScreen] Error fetching profile:', error);
       } finally {
         setLoading(false);
       }
@@ -58,7 +59,6 @@ export default function ProfileScreen() {
         <>
           <Text style={styles.header}>Welcome, {profile.username}!</Text>
           <Text style={styles.email}>{profile.email}</Text>
-          {/* Optionally add a profile image or more details */}
           {profile.profilePic && (
             <Image
               source={{ uri: profile.profilePic }}

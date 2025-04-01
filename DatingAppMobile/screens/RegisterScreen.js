@@ -11,39 +11,40 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     setLoading(true);
-    console.log('handleRegister triggered');
+    console.log('[RegisterScreen] handleRegister triggered');
     try {
-      console.log('Registering with:', { username, email, password });
+      console.log('[RegisterScreen] Registering with:', { username, email, password });
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
       });
       
-      console.log('Fetch response status:', response.status);
+      console.log('[RegisterScreen] Fetch response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[RegisterScreen] Error response:', errorData);
         throw new Error(errorData.error || 'Registration failed');
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
-      console.log('Registration success:', data);
-
+      console.log('[RegisterScreen] Response data:', data);
+      
       if (data.token) {
-        console.log('Received token:', data.token);
+        console.log('[RegisterScreen] Received token:', data.token);
         await AsyncStorage.setItem('token', data.token);
-        console.log('Token saved');
+        const storedToken = await AsyncStorage.getItem('token');
+        console.log('[RegisterScreen] Token saved:', storedToken);
       } else {
-        console.warn('No token received; proceeding to navigate for testing purposes');
+        console.warn('[RegisterScreen] No token received; proceeding to navigate for testing purposes');
       }
       
-      console.log('Navigating to Profile');
+      console.log('[RegisterScreen] Navigating to Profile');
       navigation.navigate('Profile');
-      console.log('Navigation called');
+      console.log('[RegisterScreen] Navigation called');
     } catch (error) {
-      console.error('Error during registration:', error);
+      console.error('[RegisterScreen] Error during registration:', error);
       Alert.alert('Registration Error', error.message);
     } finally {
       setLoading(false);
