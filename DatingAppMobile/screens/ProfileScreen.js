@@ -11,12 +11,12 @@ export default function ProfileScreen() {
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
 
+  // Fetch profile data on mount
   useEffect(() => {
     async function fetchProfile() {
       try {
         const token = await AsyncStorage.getItem('token');
         if (!token) throw new Error('No token found. Please log in.');
-
         const response = await fetch('http://192.168.1.119:3000/auth/profile', {
           method: 'GET',
           headers: {
@@ -24,13 +24,11 @@ export default function ProfileScreen() {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (!response.ok) {
           const errorData = await response.json();
           console.error('Error response from server:', errorData);
           throw new Error('Failed to fetch profile');
         }
-        
         const data = await response.json();
         setProfile(data);
       } catch (error) {
@@ -42,6 +40,7 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
+  // Function to select image from device gallery
   const selectImage = async () => {
     console.log("Select Image button pressed");
     if (Platform.OS !== 'web') {
@@ -51,14 +50,12 @@ export default function ProfileScreen() {
         return;
       }
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets && result.assets.length > 0) {
       console.log('Selected image asset:', result.assets[0]);
       setSelectedImage(result.assets[0]);
@@ -67,6 +64,7 @@ export default function ProfileScreen() {
     }
   };
 
+  // Function to upload the selected image
   const uploadImage = async () => {
     console.log("Upload Image button pressed");
     if (!selectedImage) {
@@ -90,7 +88,6 @@ export default function ProfileScreen() {
         type,
       });
 
-      // Note: We remove the explicit 'Content-Type' header to let fetch set the correct multipart boundary
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: {
@@ -100,13 +97,14 @@ export default function ProfileScreen() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error uploading image:', errorData);
+        const errorText = await response.text();
+        console.error('Error uploading image:', errorText);
         setUploadMessage('Error uploading profile picture.');
       } else {
+        const successData = await response.json();
+        console.log('Upload success data:', successData);
         setUploadMessage('Profile picture uploaded successfully!');
-        const updatedProfile = await response.json();
-        setProfile(updatedProfile);
+        setProfile(successData); // Optionally update the profile with new data
       }
     } catch (error) {
       console.error('Upload image error:', error);
@@ -132,10 +130,7 @@ export default function ProfileScreen() {
           <Text style={styles.header}>Welcome, {profile.username}!</Text>
           <Text style={styles.email}>{profile.email}</Text>
           {profile.profilePic ? (
-            <Image
-              source={{ uri: profile.profilePic }}
-              style={styles.profileImage}
-            />
+            <Image source={{ uri: profile.profilePic }} style={styles.profileImage} />
           ) : (
             <Text>No profile picture available.</Text>
           )}
@@ -143,10 +138,7 @@ export default function ProfileScreen() {
           <View style={styles.uploadSection}>
             <Text style={styles.sectionHeader}>Update Profile Picture</Text>
             {selectedImage && (
-              <Image
-                source={{ uri: selectedImage.uri }}
-                style={styles.selectedImage}
-              />
+              <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
             )}
             <Button title="Select Image" onPress={selectImage} />
             <View style={{ marginVertical: 10 }} />
@@ -164,21 +156,21 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { 
-    flex: 1, 
+    flex: 1,
     justifyContent: 'center', 
-    alignItems: 'center', 
+    alignItems: 'center',
     backgroundColor: '#fff',
     padding: 20
   },
   loadingContainer: { 
     flex: 1, 
     justifyContent: 'center', 
-    alignItems: 'center' 
+    alignItems: 'center'
   },
   header: { 
     fontSize: 24, 
     fontWeight: 'bold', 
-    marginBottom: 10 
+    marginBottom: 10
   },
   email: { 
     fontSize: 16, 
@@ -196,7 +188,7 @@ const styles = StyleSheet.create({
   uploadSection: {
     marginTop: 20,
     alignItems: 'center',
-    width: '100%',
+    width: '100%'
   },
   sectionHeader: {
     fontSize: 18,
@@ -207,7 +199,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    marginBottom: 10,
+    marginBottom: 10
   },
   uploadMessage: {
     marginTop: 10,
