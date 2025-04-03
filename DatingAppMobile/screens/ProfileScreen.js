@@ -1,4 +1,3 @@
-// screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,8 +18,8 @@ export default function ProfileScreen() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+            'Authorization': `Bearer ${token}`
+          }
         });
         if (!response.ok) throw new Error('Failed to fetch profile');
         const data = await response.json();
@@ -34,10 +33,10 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
-  // Function to select an image
+  // Function to select an image from the device gallery
   const selectImage = async () => {
     console.log("Select Image button pressed");
-    // On non-web platforms, request permission to access media library
+    // Request permission on non-web platforms
     if (Platform.OS !== 'web') {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
@@ -47,7 +46,7 @@ export default function ProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Use Images option exclusively
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
