@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
-  // Function to select image from device gallery
+  // Function to select an image
   const selectImage = async () => {
     console.log("Select Image button pressed");
     if (Platform.OS !== 'web') {
@@ -51,7 +51,7 @@ export default function ProfileScreen() {
       }
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images, // updated per deprecation warning
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
@@ -97,14 +97,24 @@ export default function ProfileScreen() {
       });
 
       if (!response.ok) {
+        // Try to read the error as text if response is not OK
         const errorText = await response.text();
         console.error('Error uploading image:', errorText);
         setUploadMessage('Error uploading profile picture.');
       } else {
-        const successData = await response.json();
-        console.log('Upload success data:', successData);
-        setUploadMessage('Profile picture uploaded successfully!');
-        setProfile(successData); // Optionally update the profile with new data
+        // Check the content-type header before parsing JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const successData = await response.json();
+          console.log('Upload success data:', successData);
+          setUploadMessage('Profile picture uploaded successfully!');
+          setProfile(successData); // Optionally update the profile with new data
+        } else {
+          // Response did not return JSON as expected
+          const text = await response.text();
+          console.error('Unexpected response format:', text);
+          setUploadMessage('Error: Unexpected response format from server.');
+        }
       }
     } catch (error) {
       console.error('Upload image error:', error);
