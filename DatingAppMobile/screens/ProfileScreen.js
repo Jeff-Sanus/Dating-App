@@ -1,5 +1,15 @@
+// screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert, Platform } from 'react-native';
+import { 
+  View, 
+  Text, 
+  ActivityIndicator, 
+  Image, 
+  StyleSheet, 
+  Button, 
+  Alert, 
+  Platform 
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -8,35 +18,57 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch profile data when the component mounts
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) throw new Error('No token found. Please log in.');
-        const response = await fetch('http://192.168.1.119:3000/auth/profile', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch profile');
-        const data = await response.json();
-        setProfile(data);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
-        setLoading(false);
-      }
+  // Fetch profile data using token from AsyncStorage
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found. Please login with default account.');
+      const response = await fetch('http://192.168.1.119:3000/auth/profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      const data = await response.json();
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // On component mount, attempt to fetch profile (if token is stored)
+  useEffect(() => {
     fetchProfile();
   }, []);
+
+  // Login with default account: hits /auth/default endpoint to get a token and user data.
+  const loginDefault = async () => {
+    try {
+      const response = await fetch('http://192.168.1.119:3000/auth/default', {
+        method: 'GET'
+      });
+      if (!response.ok) throw new Error('Failed to login with default account');
+      const data = await response.json();
+      // Assume data contains a token and user info. Adjust as needed.
+      await AsyncStorage.setItem('token', data.token);
+      // You may need to update this based on your backend response:
+      setProfile(data.user || data);
+      Alert.alert('Success', 'Logged in with default account.');
+    } catch (error) {
+      console.error('Error logging in with default account:', error);
+      Alert.alert('Error', 'Unable to login with default account.');
+    }
+  };
 
   // Function to select an image from the device gallery
   const selectImage = async () => {
     console.log("Select Image button pressed");
-    // Request permission on non-web platforms
     if (Platform.OS !== 'web') {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
@@ -44,14 +76,12 @@ export default function ProfileScreen() {
         return;
       }
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets && result.assets.length > 0) {
       console.log('Selected image asset:', result.assets[0]);
       setSelectedImage(result.assets[0]);
@@ -71,6 +101,10 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      {!profile && (
+        // If no profile is loaded, show a button to login with the default account.
+        <Button title="Login with Default Account" onPress={loginDefault} />
+      )}
       {profile ? (
         <>
           <Text style={styles.header}>Welcome, {profile.username}!</Text>
@@ -89,7 +123,7 @@ export default function ProfileScreen() {
           </View>
         </>
       ) : (
-        <Text>No profile data found.</Text>
+        <Text>Please login with the default account to view your profile.</Text>
       )}
     </View>
   );
