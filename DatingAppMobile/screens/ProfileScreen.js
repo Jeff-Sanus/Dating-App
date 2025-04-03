@@ -59,7 +59,6 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
 
-    // Check for the new API response
     if (!result.canceled && result.assets && result.assets.length > 0) {
       console.log('Selected image asset:', result.assets[0]);
       setSelectedImage(result.assets[0]);
@@ -91,10 +90,10 @@ export default function ProfileScreen() {
         type,
       });
 
+      // Note: We remove the explicit 'Content-Type' header to let fetch set the correct multipart boundary
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         },
         body: formData,
