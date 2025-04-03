@@ -74,6 +74,7 @@ export default function ProfileScreen() {
     setUploadLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log("Retrieved token:", token);
       if (!token) throw new Error('No token found. Please log in.');
 
       const localUri = selectedImage.uri;
@@ -87,12 +88,13 @@ export default function ProfileScreen() {
         name: filename,
         type,
       });
+      console.log("Constructed FormData:", formData);
 
-      console.log("Uploading image with FormData:", formData);
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
+          // Do not set 'Content-Type'; let fetch automatically add the multipart boundary.
         },
         body: formData,
       });
