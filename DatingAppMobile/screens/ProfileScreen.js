@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
-  // Function to select an image
+  // Function to select an image from the device gallery
   const selectImage = async () => {
     console.log("Select Image button pressed");
     if (Platform.OS !== 'web') {
@@ -51,7 +51,7 @@ export default function ProfileScreen() {
       }
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images, // updated per deprecation warning
+      mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
@@ -64,7 +64,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // Function to upload the selected image
+  // Function to upload the selected image to the server
   const uploadImage = async () => {
     console.log("Upload Image button pressed");
     if (!selectedImage) {
@@ -88,6 +88,7 @@ export default function ProfileScreen() {
         type,
       });
 
+      console.log("Uploading image with FormData:", formData);
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: {
@@ -96,29 +97,29 @@ export default function ProfileScreen() {
         body: formData,
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response content-type:", response.headers.get('content-type'));
+
       if (!response.ok) {
-        // Try to read the error as text if response is not OK
         const errorText = await response.text();
-        console.error('Error uploading image:', errorText);
-        setUploadMessage('Error uploading profile picture.');
+        console.error("Error uploading image:", errorText);
+        setUploadMessage("Error uploading profile picture.");
       } else {
-        // Check the content-type header before parsing JSON
         const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        if (contentType && contentType.includes("application/json")) {
           const successData = await response.json();
-          console.log('Upload success data:', successData);
-          setUploadMessage('Profile picture uploaded successfully!');
+          console.log("Upload success data:", successData);
+          setUploadMessage("Profile picture uploaded successfully!");
           setProfile(successData); // Optionally update the profile with new data
         } else {
-          // Response did not return JSON as expected
           const text = await response.text();
-          console.error('Unexpected response format:', text);
-          setUploadMessage('Error: Unexpected response format from server.');
+          console.error("Unexpected response format:", text);
+          setUploadMessage("Error: Unexpected response format from server.");
         }
       }
     } catch (error) {
-      console.error('Upload image error:', error);
-      setUploadMessage('Error uploading profile picture.');
+      console.error("Upload image error:", error);
+      setUploadMessage("Error uploading profile picture.");
     } finally {
       setUploadLoading(false);
     }
