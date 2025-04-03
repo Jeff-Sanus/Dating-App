@@ -11,6 +11,7 @@ export default function ProfileScreen() {
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
 
+  // Fetch profile data when the component mounts
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -23,13 +24,11 @@ export default function ProfileScreen() {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
-        }
+        if (!response.ok) throw new Error('Failed to fetch profile');
         const data = await response.json();
         setProfile(data);
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching profile:', error);
       } finally {
         setLoading(false);
       }
@@ -37,15 +36,19 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
+  // Function to select an image from the device gallery
   const selectImage = async () => {
+    console.log("Select Image button pressed");
+    // For non-web platforms, request media library permissions
     if (Platform.OS !== 'web') {
-      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!granted) {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
         Alert.alert('Permission required', 'Permission to access media library is required!');
         return;
       }
     }
 
+    // Launch image library
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
@@ -53,11 +56,16 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
 
+    // Check if an image was selected
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      console.log('Selected image asset:', result.assets[0]);
       setSelectedImage(result.assets[0]);
+    } else {
+      console.log("Image selection was canceled.");
     }
   };
 
+  // Function to upload the selected image to the server
   const uploadImage = async () => {
     if (!selectedImage) {
       Alert.alert('No image selected', 'Please select an image first.');
@@ -67,7 +75,7 @@ export default function ProfileScreen() {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No token found. Please log in.');
-
+      
       const localUri = selectedImage.uri;
       const filename = localUri.split('/').pop();
       const match = /\.(\w+)$/.exec(filename);
@@ -121,7 +129,6 @@ export default function ProfileScreen() {
           ) : (
             <Text>No profile picture available.</Text>
           )}
-
           <View style={styles.uploadSection}>
             <Text style={styles.sectionHeader}>Update Profile Picture</Text>
             {selectedImage && (
@@ -147,22 +154,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 20
+    padding: 20,
   },
   loadingContainer: { 
     flex: 1,
     justifyContent: 'center', 
-    alignItems: 'center'
+    alignItems: 'center',
   },
   header: { 
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10
+    marginBottom: 10,
   },
   email: { 
     fontSize: 16,
     color: '#666',
-    marginBottom: 20
+    marginBottom: 20,
   },
   profileImage: {
     width: 150,
@@ -170,27 +177,27 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     borderWidth: 4,
     borderColor: '#007bff',
-    marginBottom: 20
+    marginBottom: 20,
   },
   uploadSection: {
     marginTop: 20,
     alignItems: 'center',
-    width: '100%'
+    width: '100%',
   },
   sectionHeader: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 10
+    marginBottom: 10,
   },
   selectedImage: {
     width: 150,
     height: 150,
     borderRadius: 75,
-    marginBottom: 10
+    marginBottom: 10,
   },
   uploadMessage: {
     marginTop: 10,
     fontSize: 14,
-    color: '#007bff'
-  }
+    color: '#007bff',
+  },
 });
