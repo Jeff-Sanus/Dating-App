@@ -11,7 +11,6 @@ export default function ProfileScreen() {
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
 
-  // Fetch profile data on mount
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -25,14 +24,12 @@ export default function ProfileScreen() {
           }
         });
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Error response from server:', errorData);
           throw new Error('Failed to fetch profile');
         }
         const data = await response.json();
         setProfile(data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -40,41 +37,35 @@ export default function ProfileScreen() {
     fetchProfile();
   }, []);
 
-  // Function to select an image from the device gallery
   const selectImage = async () => {
-    console.log("Select Image button pressed");
     if (Platform.OS !== 'web') {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert("Permission required", "Permission to access the media library is required!");
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission required', 'Permission to access media library is required!');
         return;
       }
     }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      console.log('Selected image asset:', result.assets[0]);
       setSelectedImage(result.assets[0]);
-    } else {
-      console.log("Image selection was canceled.");
     }
   };
 
-  // Function to upload the selected image to the server
   const uploadImage = async () => {
-    console.log("Upload Image button pressed");
     if (!selectedImage) {
-      Alert.alert('No Image Selected', 'Please select an image first.');
+      Alert.alert('No image selected', 'Please select an image first.');
       return;
     }
     setUploadLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      console.log("Retrieved token:", token);
       if (!token) throw new Error('No token found. Please log in.');
 
       const localUri = selectedImage.uri;
@@ -83,45 +74,28 @@ export default function ProfileScreen() {
       const type = match ? `image/${match[1]}` : `image`;
 
       const formData = new FormData();
-      formData.append('profilePicture', {
-        uri: localUri,
-        name: filename,
-        type,
-      });
-      console.log("Constructed FormData:", formData);
+      formData.append('profilePicture', { uri: localUri, name: filename, type });
 
       const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
-          // Do not set 'Content-Type'; let fetch automatically add the multipart boundary.
         },
         body: formData,
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response content-type:", response.headers.get('content-type'));
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error uploading image:", errorText);
-        setUploadMessage("Error uploading profile picture.");
+        setUploadMessage('Error uploading image.');
+        console.error(errorText);
       } else {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes("application/json")) {
-          const successData = await response.json();
-          console.log("Upload success data:", successData);
-          setUploadMessage("Profile picture uploaded successfully!");
-          setProfile(successData); // Optionally update the profile with new data
-        } else {
-          const text = await response.text();
-          console.error("Unexpected response format:", text);
-          setUploadMessage("Error: Unexpected response format from server.");
-        }
+        const json = await response.json();
+        setUploadMessage('Image uploaded successfully!');
+        setProfile(json);
       }
     } catch (error) {
-      console.error("Upload image error:", error);
-      setUploadMessage("Error uploading profile picture.");
+      setUploadMessage('Error uploading image.');
+      console.error(error);
     } finally {
       setUploadLoading(false);
     }
@@ -176,17 +150,17 @@ const styles = StyleSheet.create({
     padding: 20
   },
   loadingContainer: { 
-    flex: 1, 
+    flex: 1,
     justifyContent: 'center', 
     alignItems: 'center'
   },
   header: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 10
   },
   email: { 
-    fontSize: 16, 
+    fontSize: 16,
     color: '#666',
     marginBottom: 20
   },
