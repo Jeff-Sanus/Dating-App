@@ -23,47 +23,58 @@ export default function ProfileScreen() {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('No token found. Please login with default account.');
+      if (!token) {
+        setProfile(null);
+        return;
+      }
       const response = await fetch('http://192.168.1.119:3000/auth/profile', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch profile');
+      if (!response.ok) {
+        setProfile(null);
+        return;
+      }
       const data = await response.json();
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      Alert.alert('Error', error.message);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // On component mount, attempt to fetch profile (if token is stored)
   useEffect(() => {
     fetchProfile();
   }, []);
 
-  // Login with default account: hits /auth/default endpoint to get a token and user data.
+  // Login with default account: calls /auth/default to get token and user data.
   const loginDefault = async () => {
     try {
       const response = await fetch('http://192.168.1.119:3000/auth/default', {
-        method: 'GET'
+        method: 'GET',
       });
       if (!response.ok) throw new Error('Failed to login with default account');
       const data = await response.json();
-      // Assume data contains a token and user info. Adjust as needed.
+      // Save the token and update the profile
       await AsyncStorage.setItem('token', data.token);
-      // You may need to update this based on your backend response:
       setProfile(data.user || data);
       Alert.alert('Success', 'Logged in with default account.');
     } catch (error) {
       console.error('Error logging in with default account:', error);
       Alert.alert('Error', 'Unable to login with default account.');
     }
+  };
+
+  // Logout: clear stored token and profile data.
+  const logout = async () => {
+    await AsyncStorage.removeItem('token');
+    setProfile(null);
+    Alert.alert('Logged out', 'You have been logged out.');
   };
 
   // Function to select an image from the device gallery
@@ -101,10 +112,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {!profile && (
-        // If no profile is loaded, show a button to login with the default account.
-        <Button title="Login with Default Account" onPress={loginDefault} />
-      )}
       {profile ? (
         <>
           <Text style={styles.header}>Welcome, {profile.username}!</Text>
@@ -121,9 +128,13 @@ export default function ProfileScreen() {
               <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
             )}
           </View>
+          <Button title="Logout" onPress={logout} />
         </>
       ) : (
-        <Text>Please login with the default account to view your profile.</Text>
+        <>
+          <Text>No profile data found.</Text>
+          <Button title="Login with Default Account" onPress={loginDefault} />
+        </>
       )}
     </View>
   );
