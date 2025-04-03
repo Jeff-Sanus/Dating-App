@@ -41,18 +41,25 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + '-' + Date.now() + ext);
   }
 });
-
 const upload = multer({ storage: storage });
 
-// Upload profile picture endpoint
+// Fallback GET route for /upload-profile-picture (informs clients to use POST)
+app.get('/upload-profile-picture', (req, res) => {
+  res.status(405).send('Method Not Allowed. Use POST to upload files.');
+});
+
+// Upload profile picture endpoint (POST)
 app.post('/upload-profile-picture', upload.single('profilePicture'), (req, res) => {
+  console.log("POST /upload-profile-picture route reached");
   if (!req.file) {
+    console.error("No file was uploaded");
     return res.status(400).json({ message: 'No file uploaded.' });
   }
   
-  // In a real-world app, you would update the user's profile in the database here.
-  // For now, we return the URL of the uploaded image.
   const fileUrl = `${req.protocol}://${req.get('host')}/${req.file.path}`;
+  console.log("File uploaded successfully at:", fileUrl);
+  
+  // Here you could update the user's profile in the database, etc.
   res.json({
     message: 'Profile picture uploaded successfully!',
     profilePic: fileUrl
