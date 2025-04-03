@@ -75,3 +75,36 @@ exports.updateProfile = async (req, res) => {
     return res.status(500).json({ error: 'Server error updating profile' });
   }
 };
+
+// GET /auth/default
+exports.defaultAccount = async (req, res) => {
+  try {
+    // Check for a default user by a fixed email
+    let user = await User.findOne({ email: 'default@datingapp.com' });
+    if (!user) {
+      // Create the default user if it doesn't exist
+      user = new User({
+        username: 'defaultUser',
+        email: 'default@datingapp.com',
+        password: 'password123', // In production, ensure to hash passwords!
+      });
+      await user.save();
+    }
+    // Generate a JWT token for the user
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Return user data without password
+    res.json({
+      message: 'Default user logged in successfully',
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic || ''
+      }
+    });
+  } catch (error) {
+    console.error('Default account error:', error);
+    res.status(500).json({ error: 'Server error logging in default account' });
+  }
+};

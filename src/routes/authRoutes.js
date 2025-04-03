@@ -7,6 +7,9 @@ const { protect } = require('../middleware/authMiddleware');
 // Public route: Signup
 router.post('/signup', authController.signup);
 
+// New default account login endpoint
+router.get('/default', authController.defaultAccount);
+
 // Protected routes: These require a valid token in the Authorization header.
 router.get('/profile', protect, authController.getProfile);
 router.put('/profile', protect, authController.updateProfile);
