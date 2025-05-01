@@ -27,7 +27,7 @@ export default function ProfileScreen({ navigation }) {
 
       // 2) Kick off the fetch
       console.log('[ProfileScreen] about to fetch:', `${baseUrl}`);
-      const res = await fetch(`${baseUrl}/auth/profile`, {
+      const res = await fetch(`${baseUrl}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -51,7 +51,7 @@ export default function ProfileScreen({ navigation }) {
       console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
-      console.log('[ProfileScreen] fetchProfile end – loading false');
+      console.log('[ProfileScreen] fetchProfile end loading false');
       setLoading(false);
     }
   };
