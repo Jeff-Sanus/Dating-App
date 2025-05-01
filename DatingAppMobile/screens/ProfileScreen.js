@@ -22,7 +22,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       // 1) Get token
       const token = await AsyncStorage.getItem('token');
-      console.log('[ProfileScreen] token:', token?.slice(0,10) + '…');
+      console.log('[ProfileScreen] FULL JWT TOKEN:', token);
       if (!token) throw new Error('No JWT token in storage');
 
       // 2) Kick off the fetch
