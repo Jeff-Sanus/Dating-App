@@ -3,11 +3,13 @@ import { Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// Import your screens
 import AuthOptionsScreen from './screens/AuthOptionsScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import LoginScreen from './screens/LoginScreen';
-import ProfileScreen from './screens/ProfileScreen';
+import RegisterScreen    from './screens/RegisterScreen';
+import LoginScreen       from './screens/LoginScreen';
+import ProfileScreen     from './screens/ProfileScreen';
+import ViewProfileScreen from './screens/ViewProfileScreen';
+import EditBioScreen     from './screens/EditBioScreen';
+import SwipingScreen     from './screens/SwipingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,23 +17,13 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="AuthOptions">
-        {/* Auth choice screen */}
+
         <Stack.Screen
           name="AuthOptions"
           component={AuthOptionsScreen}
-          options={({ navigation }) => ({
-            title: 'Welcome',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
+          options={{ title: 'Welcome' }}
         />
 
-        {/* Signup screen */}
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
@@ -47,7 +39,6 @@ export default function App() {
           })}
         />
 
-        {/* Login screen */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -63,12 +54,48 @@ export default function App() {
           })}
         />
 
-        {/* Profile screen */}
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
-          options={{ title: 'Your Profile' }}
+          options={({ navigation }) => ({
+            title: 'Edit Profile',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('ViewProfile')}
+                title="View"
+                color="#007bff"
+              />
+            ),
+          })}
         />
+
+        <Stack.Screen
+          name="ViewProfile"
+          component={ViewProfileScreen}
+          options={({ navigation }) => ({
+            title: 'My Profile',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('EditBio')}
+                title="Edit"
+                color="#007bff"
+              />
+            ),
+          })}
+        />
+
+        <Stack.Screen
+          name="EditBio"
+          component={EditBioScreen}
+          options={{ title: 'Edit Bio' }}
+        />
+
+        <Stack.Screen
+          name="Swiping"
+          component={SwipingScreen}
+          options={{ title: 'Browse Matches' }}
+        />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
