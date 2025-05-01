@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Your machine’s LAN IP:
+// Hard-coded LAN URL; remove any other baseUrl logic
 const baseUrl = 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
@@ -20,28 +20,38 @@ export default function ProfileScreen({ navigation }) {
   const fetchProfile = async () => {
     console.log('[ProfileScreen] fetchProfile start');
     try {
+      // 1) Get token
       const token = await AsyncStorage.getItem('token');
-      console.log('[ProfileScreen] token:', token?.slice(0, 10) + '…');
-      if (!token) throw new Error('Not logged in');
+      console.log('[ProfileScreen] token:', token?.slice(0,10) + '…');
+      if (!token) throw new Error('No JWT token in storage');
 
+      // 2) Kick off the fetch
+      console.log('[ProfileScreen] about to fetch:', `${baseUrl}/auth/profile`);
       const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // 3) Log status
       console.log('[ProfileScreen] response status:', res.status);
 
+      // 4) Error if not OK
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Error ${res.status}: ${txt}`);
+        const body = await res.text();
+        console.log('[ProfileScreen] error body:', body);
+        throw new Error(`Server responded ${res.status}`);
       }
 
+      // 5) Parse JSON
       const data = await res.json();
-      console.log('[ProfileScreen] profile data:', data);
+      console.log('[ProfileScreen] parsed JSON:', data);
+
+      // 6) Set into state
       setProfile(data);
     } catch (e) {
       console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
-      console.log('[ProfileScreen] fetchProfile end');
+      console.log('[ProfileScreen] fetchProfile end – loading false');
       setLoading(false);
     }
   };
@@ -75,17 +85,18 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
+  // If we reach here, profile is non-null
   return (
     <View style={styles.container}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
       <View style={styles.navRow}>
         <Button
-          title="View Full Profile"
+          title="View Profile"
           onPress={() => navigation.navigate('ViewProfile')}
         />
         <Button
-          title="Browse Matches"
+          title="Swipe"
           onPress={() => navigation.navigate('Swiping')}
         />
       </View>
@@ -94,9 +105,9 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  center:   { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
-  container:{ flex:1, alignItems:'center', padding:20, backgroundColor:'#fff' },
-  welcome:  { fontSize:24, fontWeight:'bold', marginBottom:10 },
-  email:    { fontSize:16, color:'#666', marginBottom:20 },
-  navRow:   { flexDirection:'row', justifyContent:'space-around', width:'100%' },
+  center:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  container:{ flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
+  welcome:  { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  email:    { fontSize: 16, color: '#666', marginBottom: 20 },
+  navRow:   { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 });
