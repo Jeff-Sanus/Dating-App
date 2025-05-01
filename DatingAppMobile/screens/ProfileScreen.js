@@ -10,18 +10,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Always point at your machine’s LAN IP:
+// Point at your machine’s LAN IP:
 const baseUrl = 'http://192.168.1.119:3000';
-
-// Helper to add a timeout to fetch
-const fetchWithTimeout = (url, opts = {}, timeout = 8000) => {
-  return Promise.race([
-    fetch(url, opts),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), timeout)
-    ),
-  ]);
-};
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
@@ -37,14 +27,14 @@ export default function ProfileScreen({ navigation }) {
 
       // 1) Ping root
       console.log('[ProfileScreen] pinging root:', `${baseUrl}/`);
-      const pingRes = await fetchWithTimeout(`${baseUrl}/`);
+      const pingRes = await fetch(`${baseUrl}/`);
       console.log('[ProfileScreen] ping status:', pingRes.status);
 
-      // 2) Fetch profile with timeout
+      // 2) Fetch profile without timeout
       console.log('[ProfileScreen] about to fetch from:', `${baseUrl}/auth/profile`);
-      const res = await fetchWithTimeout(`${baseUrl}/auth/profile`, {
+      const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
-      }, 8000);
+      });
       console.log('[ProfileScreen] response status:', res.status);
 
       if (!res.ok) {
@@ -100,6 +90,7 @@ export default function ProfileScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
+
       <View style={styles.navRow}>
         <Button
           title="View Full Profile"
@@ -115,9 +106,9 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  center:  { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  center:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   container:{ flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
-  welcome: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  email:   { fontSize: 16, color: '#666', marginBottom: 20 },
-  navRow:  { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  welcome:  { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  email:    { fontSize: 16, color: '#666', marginBottom: 20 },
+  navRow:   { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 });
