@@ -1,6 +1,6 @@
 // screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet, Button, Alert, Platform } from 'react-native';
+import { View, Text, ActivityIndicator, Image, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -8,182 +8,152 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [uploadMessage, setUploadMessage] = useState('');
-  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState('');
 
+  // load profile
   useEffect(() => {
-    async function fetchProfile() {
+    (async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        if (!token) throw new Error('No token found. Please log in.');
-        const response = await fetch('http://192.168.1.119:3000/auth/profile', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+        if (!token) throw new Error('Not logged in');
+        const res = await fetch('http://192.168.1.119:3000/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('Failed to fetch profile');
-        const data = await response.json();
+        if (!res.ok) throw new Error('Cannot fetch profile');
+        const data = await res.json();
         setProfile(data);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
+      } catch (e) {
+        Alert.alert('Error', e.message);
       } finally {
         setLoading(false);
       }
-    }
-    fetchProfile();
+    })();
   }, []);
 
-  const selectImage = async () => {
-    try {
-      if (Platform.OS !== 'web') {
-        const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!granted) {
-          Alert.alert('Permission required', 'Permission to access media library is required!');
-          return;
-        }
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission required', 'Allow photo access to update your picture.');
+        return;
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-      if (!result.canceled && result.assets.length > 0) {
-        setSelectedImage(result.assets[0]);
-      }
-    } catch (err) {
-      console.error('ImagePicker Error:', err);
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0]);
+      setMessage('');
     }
   };
 
-  const uploadImage = async () => {
+  const uploadAndSave = async () => {
     if (!selectedImage) {
-      Alert.alert('No image selected', 'Please select an image first.');
+      Alert.alert('No image', 'Please select an image first.');
       return;
     }
-    setUploadLoading(true);
+    setUploading(true);
+    setMessage('');
     try {
       const token = await AsyncStorage.getItem('token');
-      const localUri = selectedImage.uri;
-      const filename = localUri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename);
+      const uri = selectedImage.uri;
+      const name = uri.split('/').pop();
+      const match = /\.(\w+)$/.exec(name);
       const type = match ? `image/${match[1]}` : 'image';
-
       const formData = new FormData();
-      formData.append('profilePicture', { uri: localUri, name: filename, type });
+      formData.append('profilePicture', { uri, name, type });
 
-      const response = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
+      // 1. upload file
+      const uploadRes = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error uploading image:', errorText);
-        setUploadMessage('Error uploading profile picture.');
-      } else {
-        const data = await response.json();
-        setUploadMessage('Profile picture uploaded successfully!');
-        setProfile(data);
-        setSelectedImage(null);
-      }
-    } catch (error) {
-      console.error('Upload image error:', error);
-      setUploadMessage('Error uploading profile picture.');
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const { profilePic } = await uploadRes.json();
+
+      // 2. save URL in user profile
+      const saveRes = await fetch('http://192.168.1.119:3000/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ profilePic }),
+      });
+      if (!saveRes.ok) throw new Error('Saving profile picture failed');
+      const updated = await saveRes.json();
+
+      setProfile(updated.user || updated);
+      setSelectedImage(null);
+      setMessage('Profile picture updated!');
+    } catch (e) {
+      Alert.alert('Error', e.message);
+      setMessage(e.message);
     } finally {
-      setUploadLoading(false);
+      setUploading(false);
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.center}>
         <ActivityIndicator size="large" color="#007bff" />
-        <Text>Loading profile...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {profile ? (
-        <>
-          <Text style={styles.header}>Welcome, {profile.username}!</Text>
-          <Text style={styles.email}>{profile.email}</Text>
-          {profile.profilePic ? (
-            <Image source={{ uri: profile.profilePic }} style={styles.profileImage} />
-          ) : (
-            <Text>No profile picture available.</Text>
-          )}
+      <Text style={styles.header}>Welcome, {profile.username}!</Text>
+      <Text style={styles.email}>{profile.email}</Text>
 
-          <View style={styles.uploadSection}>
-            <Text style={styles.sectionHeader}>Update Profile Picture</Text>
-            {selectedImage && (
-              <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
-            )}
-            <Button title="Select Image" onPress={selectImage} />
-            <View style={{ height: 10 }} />
-            <Button title="Upload Picture" onPress={uploadImage} disabled={uploadLoading} />
-            {uploadLoading && <ActivityIndicator size="small" color="#007bff" />}
-            {uploadMessage !== '' && <Text style={styles.uploadMessage}>{uploadMessage}</Text>}
-          </View>
-        </>
+      {profile.profilePic ? (
+        <Image source={{ uri: profile.profilePic }} style={styles.avatar} />
       ) : (
-        <Text>No profile data found.</Text>
+        <View style={[styles.avatar, styles.placeholder]}>
+          <Text style={styles.placeholderText}>No Photo</Text>
+        </View>
       )}
+
+      <TouchableOpacity style={styles.button} onPress={pickImage}>
+        <Text style={styles.buttonText}>Select New Photo</n        </Text>
+      </TouchableOpacity>
+
+      {selectedImage && (
+        <>
+          <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
+          <TouchableOpacity
+            style={[styles.button, uploading && styles.disabled]}
+            onPress={uploadAndSave}
+            disabled={uploading}
+          >
+            <Text style={styles.buttonText}>
+              {uploading ? 'Uploading...' : 'Upload & Save'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {message ? <Text style={styles.message}>{message}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1,
-    justifyContent: 'center', 
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  loadingContainer: { 
-    flex: 1,
-    justifyContent: 'center', 
-    alignItems: 'center'
-  },
-  header: { 
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10
-  },
-  email: { 
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20
-  },
-  profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 4,
-    borderColor: '#007bff',
-    marginBottom: 20
-  },
-  uploadSection: {
-    alignItems: 'center'
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 10
-  },
-  selectedImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10
-  },
-  uploadMessage: {
-    marginTop: 10,
-    color: '#007bff'
-  }
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
+  header: { fontSize: 24, fontWeight: 'bold', marginVertical: 10 },
+  email: { fontSize: 16, color: '#666', marginBottom: 20 },
+  avatar: { width: 140, height: 140, borderRadius: 70, marginBottom: 20 },
+  placeholder: { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: '#666' },
+  button: { backgroundColor: '#007bff', padding: 12, borderRadius: 8, marginVertical: 10 },
+  disabled: { backgroundColor: '#aaa' },
+  buttonText: { color: '#fff', fontSize: 16 },
+  preview: { width: 120, height: 120, borderRadius: 60, marginVertical: 10 },
+  message: { marginTop: 10, color: 'green' },
 });
