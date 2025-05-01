@@ -120,7 +120,7 @@ export default function ProfileScreen() {
       )}
 
       <TouchableOpacity style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>Select New Photo</n        </Text>
+        <Text style={styles.buttonText}>Select New Photo</Text>
       </TouchableOpacity>
 
       {selectedImage && (
