@@ -1,6 +1,15 @@
 // screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -11,23 +20,28 @@ export default function ProfileScreen() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
 
-  // load profile
+  // Fetch profile helper
+  const fetchProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Not logged in');
+      const res = await fetch('http://192.168.1.119:3000/auth/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Cannot fetch profile');
+      const data = await res.json();
+      console.log('Fetched profile:', data);
+      setProfile(data);
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    }
+  };
+
+  // Load profile on mount
   useEffect(() => {
     (async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) throw new Error('Not logged in');
-        const res = await fetch('http://192.168.1.119:3000/auth/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Cannot fetch profile');
-        const data = await res.json();
-        setProfile(data);
-      } catch (e) {
-        Alert.alert('Error', e.message);
-      } finally {
-        setLoading(false);
-      }
+      await fetchProfile();
+      setLoading(false);
     })();
   }, []);
 
@@ -64,9 +78,16 @@ export default function ProfileScreen() {
       const match = /\.(\w+)$/.exec(name);
       const type = match ? `image/${match[1]}` : 'image';
       const formData = new FormData();
-      formData.append('profilePicture', { uri, name, type });
 
-      // 1. upload file
+      if (Platform.OS === 'web') {
+        const blobRes = await fetch(uri);
+        const blob = await blobRes.blob();
+        formData.append('profilePicture', blob, name);
+      } else {
+        formData.append('profilePicture', { uri, name, type });
+      }
+
+      // Upload file
       const uploadRes = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -75,19 +96,19 @@ export default function ProfileScreen() {
       if (!uploadRes.ok) throw new Error('Upload failed');
       const { profilePic } = await uploadRes.json();
 
-      // 2. save URL in user profile
+      // Save URL in profile
       const saveRes = await fetch('http://192.168.1.119:3000/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ profilePic }),
       });
       if (!saveRes.ok) throw new Error('Saving profile picture failed');
-      const updated = await saveRes.json();
 
-      setProfile(updated.user || updated);
+      // Re-fetch to get the latest profile
+      await fetchProfile();
       setSelectedImage(null);
       setMessage('Profile picture updated!');
     } catch (e) {
@@ -108,10 +129,10 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Welcome, {profile.username}!</Text>
-      <Text style={styles.email}>{profile.email}</Text>
+      <Text style={styles.header}>Welcome, {profile?.username}!</Text>
+      <Text style={styles.email}>{profile?.email}</Text>
 
-      {profile.profilePic ? (
+      {profile?.profilePic ? (
         <Image source={{ uri: profile.profilePic }} style={styles.avatar} />
       ) : (
         <View style={[styles.avatar, styles.placeholder]}>
@@ -124,7 +145,7 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       {selectedImage && (
-        <>
+        <>  
           <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
           <TouchableOpacity
             style={[styles.button, uploading && styles.disabled]}
@@ -138,7 +159,7 @@ export default function ProfileScreen() {
         </>
       )}
 
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      {!!message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
 }
