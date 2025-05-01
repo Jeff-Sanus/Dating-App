@@ -10,7 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Hard-coded LAN URL; remove any other baseUrl logic
-const baseUrl = 'https://c76e-2600-1700-9460-df60-d4c3-6917-f937-169a.ngrok-free.app';
+const baseUrl = ' https://c76e-2600-1700-9460-df60-d4c3-6917-f937-169a.ngrok-free.app -> http://localhost:3000  ';
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
