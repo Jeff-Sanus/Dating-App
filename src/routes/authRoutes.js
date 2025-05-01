@@ -1,16 +1,12 @@
 // src/routes/authRoutes.js
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
 const authController = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect }    = require('../middleware/authMiddleware');
 
-// Public route: Signup
 router.post('/signup', authController.signup);
-
-// New default account login endpoint
+router.post('/login',  authController.login);         // ← new!
 router.get('/default', authController.defaultAccount);
-
-// Protected routes: These require a valid token in the Authorization header.
 router.get('/profile', protect, authController.getProfile);
 router.put('/profile', protect, authController.updateProfile);
 

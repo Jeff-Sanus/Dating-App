@@ -1,94 +1,34 @@
-import React from 'react';
-import { Button } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import RegisterScreen    from './screens/RegisterScreen';
-import LoginScreen       from './screens/LoginScreen';
-import ProfileScreen     from './screens/ProfileScreen';
-import ViewProfileScreen from './screens/ViewProfileScreen';
-import EditBioScreen     from './screens/EditBioScreen';
-import SwipingScreen     from './screens/SwipingScreen';
+import LoginScreen    from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import ProfileScreen  from './screens/ProfileScreen';
+// … other screens …
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const token = await AsyncStorage.getItem('token');
+      setInitialRoute(token ? 'Profile' : 'Login');
+    })();
+  }, []);
+
+  if (!initialRoute) return null; // or a splash
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Register">
-
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={({ navigation }) => ({
-            title: 'Sign Up',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
-
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={({ navigation }) => ({
-            title: 'Log In',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
-
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={({ navigation }) => ({
-            title: 'Edit Profile',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('ViewProfile')}
-                title="View"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
-
-        <Stack.Screen
-          name="ViewProfile"
-          component={ViewProfileScreen}
-          options={({ navigation }) => ({
-            title: 'My Profile',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('EditBio')}
-                title="Edit"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
-
-        <Stack.Screen
-          name="EditBio"
-          component={EditBioScreen}
-          options={{ title: 'Edit Bio' }}
-        />
-
-        <Stack.Screen
-          name="Swiping"
-          component={SwipingScreen}
-          options={{ title: 'Browse Matches' }}
-        />
-
+      <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen name="Login"    component={LoginScreen}    options={{ title: 'Log In' }} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Sign Up' }} />
+        <Stack.Screen name="Profile"  component={ProfileScreen}  options={{ title: 'My Profile' }} />
+        {/* …other screens */}
       </Stack.Navigator>
     </NavigationContainer>
   );
