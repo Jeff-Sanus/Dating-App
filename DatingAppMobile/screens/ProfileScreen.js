@@ -10,7 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Hard-coded LAN URL; remove any other baseUrl logic
-const baseUrl = 'http://192.168.1.119:3000';
+const baseUrl = 'https://abcd-1234.exp.direct';
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
