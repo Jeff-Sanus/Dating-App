@@ -1,3 +1,4 @@
+// screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -6,6 +7,7 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  Button,
   Alert,
   Platform,
 } from 'react-native';
@@ -19,7 +21,7 @@ export default function ProfileScreen({ navigation }) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
 
-  // Helper to fetch profile
+  // Fetch the current user's profile
   const fetchProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -35,7 +37,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // Initial load
+  // On mount, load profile
   useEffect(() => {
     (async () => {
       await fetchProfile();
@@ -43,12 +45,12 @@ export default function ProfileScreen({ navigation }) {
     })();
   }, []);
 
-  // Pick image from gallery
+  // Pick an image from the library
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        Alert.alert('Permission required', 'Allow photo access.');
+        Alert.alert('Permission required', 'Allow photo access to update your picture.');
         return;
       }
     }
@@ -63,7 +65,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // Upload and save new pic
+  // Upload & save new profile picture
   const uploadAndSave = async () => {
     if (!selectedImage) {
       Alert.alert('No image', 'Please select an image first.');
@@ -87,7 +89,7 @@ export default function ProfileScreen({ navigation }) {
         formData.append('profilePicture', { uri, name, type });
       }
 
-      // 1) upload
+      // 1) Upload file
       const uploadRes = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -96,7 +98,7 @@ export default function ProfileScreen({ navigation }) {
       if (!uploadRes.ok) throw new Error('Upload failed');
       const { profilePic } = await uploadRes.json();
 
-      // 2) save URL
+      // 2) Save URL in profile
       const saveRes = await fetch('http://192.168.1.119:3000/auth/profile', {
         method: 'PUT',
         headers: {
@@ -107,7 +109,7 @@ export default function ProfileScreen({ navigation }) {
       });
       if (!saveRes.ok) throw new Error('Save failed');
 
-      // 3) re-fetch
+      // 3) Re-fetch profile to update UI
       await fetchProfile();
       setSelectedImage(null);
       setMessage('Profile picture updated!');
@@ -129,8 +131,9 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Welcome, {profile?.username}!</Text>
-      <Text style={styles.email}>{profile?.email}</Text>
+      <Text style={styles.header}>Edit Profile</Text>
+      <Text style={styles.sub}>{profile?.username}</Text>
+      <Text style={styles.sub}>{profile?.email}</Text>
 
       {profile?.profilePic ? (
         <Image source={{ uri: profile.profilePic }} style={styles.avatar} />
@@ -159,41 +162,30 @@ export default function ProfileScreen({ navigation }) {
         </>
       )}
 
-      {message !== '' && <Text style={styles.message}>{message}</Text>}
+      {!!message && <Text style={styles.message}>{message}</Text>}
 
-      {/* Navigation Buttons */}
-      <View style={styles.navButtons}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Swiping')}
-        >
-          <Text style={styles.navButtonText}>Go to Swipes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate('EditBio')}
-        >
-          <Text style={styles.navButtonText}>Edit Bio</Text>
-        </TouchableOpacity>
+      <View style={styles.viewProfile}>
+        <Button
+          title="View My Profile"
+          onPress={() => navigation.navigate('ViewProfile')}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  center:    { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
-  header: { fontSize: 24, fontWeight: 'bold', marginVertical: 10 },
-  email: { fontSize: 16, color: '#666', marginBottom: 20 },
-  avatar: { width: 140, height: 140, borderRadius: 70, marginBottom: 20 },
+  header:    { fontSize: 24, fontWeight: 'bold', marginVertical: 10 },
+  sub:       { fontSize: 16, color: '#666', marginBottom: 5 },
+  avatar:    { width: 140, height: 140, borderRadius: 70, marginVertical: 15 },
   placeholder: { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
   placeholderText: { color: '#666' },
-  button: { backgroundColor: '#007bff', padding: 12, borderRadius: 8, marginVertical: 10 },
-  disabled: { backgroundColor: '#aaa' },
-  buttonText: { color: '#fff', fontSize: 16 },
-  preview: { width: 120, height: 120, borderRadius: 60, marginVertical: 10 },
-  message: { marginTop: 10, color: 'green' },
-  navButtons: { flexDirection: 'row', marginTop: 20 },
-  navButton: { backgroundColor: '#28a745', padding: 10, borderRadius: 5, marginHorizontal: 5 },
-  navButtonText: { color: '#fff' },
+  button:    { backgroundColor: '#007bff', padding: 12, borderRadius: 8, marginVertical: 10 },
+  disabled:  { backgroundColor: '#aaa' },
+  buttonText:{ color: '#fff', fontSize: 16 },
+  preview:   { width: 120, height: 120, borderRadius: 60, marginVertical: 10 },
+  message:   { marginTop: 10, color: 'green' },
+  viewProfile: { marginTop: 20 },
 });
