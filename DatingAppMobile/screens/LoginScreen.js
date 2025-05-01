@@ -1,17 +1,11 @@
-// screens/LoginScreen.js
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
+  View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
+  const [username, setUsername] = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -20,9 +14,9 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       const res = await fetch('http://192.168.1.119:3000/auth/login', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, email, password }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -41,7 +35,14 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Log In</Text>
-      
+
+      <TextInput
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        style={styles.input}
+      />
+
       <TextInput
         placeholder="Email"
         value={email}
