@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       {selectedImage && (
-        <>  
+        <>
           <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
           <TouchableOpacity
             style={[styles.button, uploading && styles.disabled]}
@@ -159,7 +159,23 @@ export default function ProfileScreen() {
         </>
       )}
 
-      {!!message && <Text style={styles.message}>{message}</Text>}
+      {message !== '' && <Text style={styles.message}>{message}</Text>}
+
+      {/* Navigation Buttons */}
+      <View style={styles.navButtons}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('Swiping')}
+        >
+          <Text style={styles.navButtonText}>Go to Swipes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('EditBio')}
+        >
+          <Text style={styles.navButtonText}>Edit Bio</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -177,4 +193,7 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16 },
   preview: { width: 120, height: 120, borderRadius: 60, marginVertical: 10 },
   message: { marginTop: 10, color: 'green' },
+  navButtons: { flexDirection: 'row', marginTop: 20 },
+  navButton: { backgroundColor: '#28a745', padding: 10, borderRadius: 5, marginHorizontal: 5 },
+  navButtonText: { color: '#fff' },
 });
