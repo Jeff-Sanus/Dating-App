@@ -5,9 +5,10 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const baseUrl = Platform.OS === 'android'
-  ? 'http://10.0.2.2:3000'
+  // emulator or real device on the same Wi-Fi:
+  ? 'http://192.168.1.119:3000'
   : 'http://192.168.1.119:3000';
-
+  
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
