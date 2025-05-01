@@ -90,5 +90,5 @@ app.use((err, req, res, next) => {
 
 // 12. Start listening on all interfaces
 app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Server is listening on http://0.0.0.0:${port}`);
+  console.log(`🚀 Server is listening on 0.0.0.0:${port}`);
 });
