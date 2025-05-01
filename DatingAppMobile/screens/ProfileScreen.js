@@ -18,6 +18,8 @@ export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
   const [error, setError]     = useState('');
 
+  console.log('[ProfileScreen] fetchProfile start');
+  // Fetch profile data from the server
   const fetchProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
