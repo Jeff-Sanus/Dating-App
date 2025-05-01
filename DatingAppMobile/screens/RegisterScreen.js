@@ -1,51 +1,35 @@
 // screens/RegisterScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
 
   const handleRegister = async () => {
     setLoading(true);
-    console.log('[RegisterScreen] handleRegister triggered');
     try {
-      console.log('[RegisterScreen] Registering with:', { username, email, password });
       const response = await fetch('http://192.168.1.119:3000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify({ username, email, password }),
       });
-      
-      console.log('[RegisterScreen] Fetch response status:', response.status);
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('[RegisterScreen] Error response:', errorData);
-        throw new Error(errorData.error || 'Registration failed');
+        const err = await response.json();
+        throw new Error(err.error || 'Signup failed');
       }
 
       const data = await response.json();
-      console.log('[RegisterScreen] Response data:', data);
-      
-      if (data.token) {
-        console.log('[RegisterScreen] Received token:', data.token);
-        await AsyncStorage.setItem('token', data.token);
-        const storedToken = await AsyncStorage.getItem('token');
-        console.log('[RegisterScreen] Token saved:', storedToken);
-      } else {
-        console.warn('[RegisterScreen] No token received; proceeding to navigate for testing purposes');
-      }
-      
-      console.log('[RegisterScreen] Navigating to Profile');
-      navigation.navigate('Profile');
-      console.log('[RegisterScreen] Navigation called');
-    } catch (error) {
-      console.error('[RegisterScreen] Error during registration:', error);
-      Alert.alert('Registration Error', error.message);
+      // 1. Save the token
+      await AsyncStorage.setItem('token', data.token);
+      // 2. Navigate to Profile
+      navigation.replace('Profile');
+    } catch (e) {
+      Alert.alert('Registration Error', e.message);
     } finally {
       setLoading(false);
     }
@@ -53,66 +37,46 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Register</Text>
       <TextInput
-        style={styles.input}
         placeholder="Username"
-        onChangeText={setUsername}
         value={username}
+        onChangeText={setUsername}
+        style={styles.input}
       />
       <TextInput
-        style={styles.input}
         placeholder="Email"
-        onChangeText={setEmail}
         value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
+        style={styles.input}
       />
       <TextInput
-        style={styles.input}
         placeholder="Password"
-        onChangeText={setPassword}
         value={password}
+        onChangeText={setPassword}
         secureTextEntry
+        style={styles.input}
       />
-      <TouchableOpacity
-        style={styles.button}
+      <Button
+        title={loading ? 'Signing Up...' : 'Sign Up'}
         onPress={handleRegister}
         disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Registering...' : 'Sign Up'}
-        </Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 20, 
-    justifyContent: 'center' 
-  },
-  header: { 
-    fontSize: 24, 
-    marginBottom: 20, 
-    textAlign: 'center' 
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
   },
   input: {
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    padding: 10, 
-    marginBottom: 15, 
-    borderRadius: 5
-  },
-  button: {
-    backgroundColor: '#007bff',
-    padding: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 15,
+    padding: 10,
     borderRadius: 5,
-    alignItems: 'center'
   },
-  buttonText: { 
-    color: '#fff', 
-    fontSize: 16 
-  }
 });
