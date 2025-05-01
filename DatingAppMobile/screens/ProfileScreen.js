@@ -1,35 +1,38 @@
+// screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ActivityIndicator, Button, StyleSheet, Platform
+  View, Text, ActivityIndicator, Button, StyleSheet, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const baseUrl = Platform.OS === 'android'
-  // emulator or real device on the same Wi-Fi:
-  ? 'http://192.168.1.119:3000'
-  : 'http://192.168.1.119:3000';
-  
+const baseUrl = 'http://192.168.1.119:3000';  // ← your PC’s LAN IP
+
 export default function ProfileScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [error, setError]     = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [profile, setProfile]   = useState(null);
+  const [error, setError]       = useState('');
 
   const fetchProfile = async () => {
     setError('');
     console.log('[ProfileScreen] about to fetch:', `${baseUrl}/auth/profile`);
     try {
       const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No auth token, please log in again.');
+
       const res = await fetch(`${baseUrl}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       console.log('[ProfileScreen] response status:', res.status);
+
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`Server ${res.status}: ${text}`);
       }
+
       const data = await res.json();
       console.log('[ProfileScreen] got JSON:', data);
       setProfile(data);
+
     } catch (e) {
       console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
@@ -50,14 +53,16 @@ export default function ProfileScreen({ navigation }) {
       </View>
     );
   }
+
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color:'red' }}>{error}</Text>
+        <Text style={{ color:'red', marginBottom:20 }}>{error}</Text>
         <Button title="Retry" onPress={() => { setLoading(true); fetchProfile(); }} />
       </View>
     );
   }
+
   return (
     <View style={styles.center}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
