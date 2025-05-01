@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Always point at your computer’s LAN IP and port:
+// <-- hardcode your machine's LAN IP here:
 const baseUrl = 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
@@ -18,26 +18,31 @@ export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null);
   const [error, setError]     = useState('');
 
-  console.log('[ProfileScreen] fetchProfile start');
-  // Fetch profile data from the server
   const fetchProfile = async () => {
+    console.log('[ProfileScreen] fetchProfile start');
     try {
       const token = await AsyncStorage.getItem('token');
+      console.log('[ProfileScreen] token:', token);
       if (!token) throw new Error('No token in storage');
+
       const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('[ProfileScreen] response status:', res.status);
+
       if (!res.ok) {
-        // grab server’s error message if any
         const errText = await res.text();
         throw new Error(`Server ${res.status}: ${errText}`);
       }
+
       const data = await res.json();
+      console.log('[ProfileScreen] profile data:', data);
       setProfile(data);
     } catch (e) {
-      console.error('fetchProfile error:', e);
+      console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
+      console.log('[ProfileScreen] fetchProfile end (loading false)');
       setLoading(false);
     }
   };
@@ -55,7 +60,6 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
-  // If fetch failed or profile is still null
   if (error || !profile) {
     return (
       <View style={styles.center}>
@@ -76,16 +80,29 @@ export default function ProfileScreen({ navigation }) {
 
   // Successful load
   return (
-    <View style={styles.center}>
+    <View style={styles.container}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
-      {/* Add your avatar, buttons, etc. below */}
+
+      {/* You can add avatar or other profile fields here */}
+      <View style={styles.navRow}>
+        <Button
+          title="View Full Profile"
+          onPress={() => navigation.navigate('ViewProfile')}
+        />
+        <Button
+          title="Browse Matches"
+          onPress={() => navigation.navigate('Swiping')}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   center:  { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  container:{ flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
   welcome: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  email:   { fontSize: 16, color: '#666' },
+  email:   { fontSize: 16, color: '#666', marginBottom: 20 },
+  navRow:  { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 });
