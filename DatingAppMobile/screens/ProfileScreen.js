@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const baseUrl = 'https://c76e-2600-1700-9460-df60-d4c3-6917-f937-169a.ngrok-free.app';
+const baseUrl = Platform.OS === 'android'
+  ? 'http://10.0.2.2:3000'
+  : 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
