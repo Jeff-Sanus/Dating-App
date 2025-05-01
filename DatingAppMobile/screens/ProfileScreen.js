@@ -6,11 +6,14 @@ import {
   ActivityIndicator,
   Button,
   StyleSheet,
+  Alert,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Hard-coded LAN URL; remove any other baseUrl logic
-const baseUrl = 'https://c76e-2600-1700-9460-df60-d4c3-6917-f937-169a.ngrok-free.app';
+const baseUrl = Platform.OS === 'android'
+  ? 'http://10.0.2.2:3000'            // emulator
+  : 'http://192.168.1.119:3000';      // your LAN IP
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
@@ -18,40 +21,39 @@ export default function ProfileScreen({ navigation }) {
   const [error, setError]     = useState('');
 
   const fetchProfile = async () => {
-    console.log('[ProfileScreen] fetchProfile start');
+    setError('');
     try {
-      // 1) Get token
       const token = await AsyncStorage.getItem('token');
-      console.log('[ProfileScreen] FULL JWT TOKEN:', token);
-      if (!token) throw new Error('No JWT token in storage');
+      if (!token) throw new Error('No auth token, please log in again.');
 
-      // 2) Kick off the fetch
-      console.log('[ProfileScreen] about to fetch:', `${baseUrl}`);
-      const res = await fetch(`${baseUrl}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const url = `${baseUrl}/auth/profile`;
+      console.log('[ProfileScreen] fetching protected profile from:', url);
+
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
       });
 
-      // 3) Log status
       console.log('[ProfileScreen] response status:', res.status);
 
-      // 4) Error if not OK
+      // If not 2xx, read out the error body:
       if (!res.ok) {
-        const body = await res.text();
-        console.log('[ProfileScreen] error body:', body);
-        throw new Error(`Server responded ${res.status}`);
+        const errText = await res.text();
+        throw new Error(`Server ${res.status}: ${errText}`);
       }
 
-      // 5) Parse JSON
+      // parse JSON
       const data = await res.json();
-      console.log('[ProfileScreen] parsed JSON:', data);
-
-      // 6) Set into state
+      console.log('[ProfileScreen] got profile JSON:', data);
       setProfile(data);
+
     } catch (e) {
       console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
-      console.log('[ProfileScreen] fetchProfile end loading - false');
       setLoading(false);
     }
   };
@@ -72,42 +74,27 @@ export default function ProfileScreen({ navigation }) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: 'red', marginBottom: 20 }}>{error}</Text>
-        <Button
-          title="Try Again"
-          onPress={() => {
-            setError('');
-            setLoading(true);
-            fetchProfile();
-          }}
-        />
+        <Text style={{ color:'red', marginBottom:20 }}>{error}</Text>
+        <Button title="Try Again" onPress={fetchProfile} />
       </View>
     );
   }
 
-  // If we reach here, profile is non-null
   return (
-    <View style={styles.container}>
+    <View style={styles.center}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
-      <View style={styles.navRow}>
-        <Button
-          title="View Profile"
-          onPress={() => navigation.navigate('ViewProfile')}
-        />
-        <Button
-          title="Swipe"
-          onPress={() => navigation.navigate('Swiping')}
-        />
+      <View style={{ marginTop:20, width:'100%' }}>
+        <Button title="View My Profile" onPress={() => navigation.navigate('ViewProfile')} />
+        <View style={{ height:10 }}/>
+        <Button title="Browse Matches" onPress={() => navigation.navigate('Swiping')} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  container:{ flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
-  welcome:  { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  email:    { fontSize: 16, color: '#666', marginBottom: 20 },
-  navRow:   { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  center:  { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
+  welcome: { fontSize:24, fontWeight:'bold', marginBottom:10 },
+  email:   { fontSize:16, color:'#666' },
 });
