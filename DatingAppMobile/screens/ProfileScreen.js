@@ -9,65 +9,45 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Your machine’s LAN IP:
 const baseUrl = 'http://192.168.1.119:3000';
-
-// Simple timeout for any fetch
-const fetchWithTimeout = (url, opts = {}, timeout = 8000) =>
-  Promise.race([
-    fetch(url, opts),
-    new Promise((_, rej) =>
-      setTimeout(() => rej(new Error('Request timed out')), timeout)
-    ),
-  ]);
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [error, setError]     = useState('');
 
-  const loginDefault = async () => {
-    console.log('[ProfileScreen] loginDefault start');
+  const fetchProfile = async () => {
+    console.log('[ProfileScreen] fetchProfile start');
     try {
-      console.log('[ProfileScreen] fetching /auth/default');
-      const res = await fetchWithTimeout(`${baseUrl}/auth/default`, {}, 8000);
-      console.log('[ProfileScreen] default-login responded:', res.status);
+      const token = await AsyncStorage.getItem('token');
+      console.log('[ProfileScreen] token:', token?.slice(0, 10) + '…');
+      if (!token) throw new Error('Not logged in');
+
+      const res = await fetch(`${baseUrl}/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('[ProfileScreen] response status:', res.status);
 
       if (!res.ok) {
         const txt = await res.text();
-        console.log('[ProfileScreen] default-login error body:', txt);
-        throw new Error(`Default login failed: ${res.status}`);
+        throw new Error(`Error ${res.status}: ${txt}`);
       }
 
-      console.log('[ProfileScreen] default-login OK, parsing JSON');
-      const { token, user } = await res.json();
-      console.log(
-        '[ProfileScreen] default-login JSON:',
-        { token: token.slice(0, 10) + '…', username: user.username }
-      );
-
-      await AsyncStorage.setItem('token', token);
-      console.log('[ProfileScreen] default token saved');
-
-      return user;
+      const data = await res.json();
+      console.log('[ProfileScreen] profile data:', data);
+      setProfile(data);
     } catch (e) {
-      console.error('[ProfileScreen] loginDefault error:', e);
-      throw e;
-    }
-  };
-
-  const loadProfile = async () => {
-    try {
-      const defaultUser = await loginDefault();
-      setProfile(defaultUser);
-    } catch (e) {
+      console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
+      console.log('[ProfileScreen] fetchProfile end');
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProfile();
+    fetchProfile();
   }, []);
 
   if (loading) {
@@ -88,7 +68,7 @@ export default function ProfileScreen({ navigation }) {
           onPress={() => {
             setError('');
             setLoading(true);
-            loadProfile();
+            fetchProfile();
           }}
         />
       </View>
@@ -100,8 +80,14 @@ export default function ProfileScreen({ navigation }) {
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
       <View style={styles.navRow}>
-        <Button title="View Profile" onPress={() => navigation.navigate('ViewProfile')} />
-        <Button title="Browse Matches" onPress={() => navigation.navigate('Swiping')} />
+        <Button
+          title="View Full Profile"
+          onPress={() => navigation.navigate('ViewProfile')}
+        />
+        <Button
+          title="Browse Matches"
+          onPress={() => navigation.navigate('Swiping')}
+        />
       </View>
     </View>
   );
