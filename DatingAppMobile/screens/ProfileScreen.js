@@ -13,6 +13,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Always point at your machine’s LAN IP:
 const baseUrl = 'http://192.168.1.119:3000';
 
+// Helper to add a timeout to fetch
+const fetchWithTimeout = (url, opts = {}, timeout = 8000) => {
+  return Promise.race([
+    fetch(url, opts),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), timeout)
+    ),
+  ]);
+};
+
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -25,16 +35,16 @@ export default function ProfileScreen({ navigation }) {
       console.log('[ProfileScreen] token:', token);
       if (!token) throw new Error('No token in storage');
 
-      // 1) Ping root to check connectivity
+      // 1) Ping root
       console.log('[ProfileScreen] pinging root:', `${baseUrl}/`);
-      const pingRes = await fetch(`${baseUrl}/`);
+      const pingRes = await fetchWithTimeout(`${baseUrl}/`);
       console.log('[ProfileScreen] ping status:', pingRes.status);
 
-      // 2) Fetch protected profile
+      // 2) Fetch profile with timeout
       console.log('[ProfileScreen] about to fetch from:', `${baseUrl}/auth/profile`);
-      const res = await fetch(`${baseUrl}/auth/profile`, {
+      const res = await fetchWithTimeout(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
-      });
+      }, 8000);
       console.log('[ProfileScreen] response status:', res.status);
 
       if (!res.ok) {
@@ -90,7 +100,6 @@ export default function ProfileScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
-
       <View style={styles.navRow}>
         <Button
           title="View Full Profile"
