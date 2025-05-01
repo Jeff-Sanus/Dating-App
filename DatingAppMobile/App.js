@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+// App.js
+import React from 'react';
 import { Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,23 +16,9 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Register">
+      <Stack.Navigator initialRouteName="Login">
 
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={({ navigation }) => ({
-            title: 'Sign Up',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
-
+        {/* LOGIN SCREEN: header button to go to SIGN UP */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -39,14 +26,31 @@ export default function App() {
             title: 'Log In',
             headerRight: () => (
               <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
+                onPress={() => navigation.navigate('Register')}
+                title="Sign Up"
                 color="#007bff"
               />
             ),
           })}
         />
 
+        {/* REGISTER SCREEN: header button to go back to LOGIN */}
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={({ navigation }) => ({
+            title: 'Sign Up',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('Login')}
+                title="Log In"
+                color="#007bff"
+              />
+            ),
+          })}
+        />
+
+        {/* PROFILE EDIT SCREEN */}
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
@@ -62,7 +66,7 @@ export default function App() {
           })}
         />
 
-        {/* Make sure this exactly matches the name you navigate to */}
+        {/* READ-ONLY PROFILE SCREEN */}
         <Stack.Screen
           name="ViewProfile"
           component={ViewProfileScreen}
@@ -78,12 +82,14 @@ export default function App() {
           })}
         />
 
+        {/* BIO EDIT SCREEN */}
         <Stack.Screen
           name="EditBio"
           component={EditBioScreen}
           options={{ title: 'Edit Bio' }}
         />
 
+        {/* SWIPING SCREEN */}
         <Stack.Screen
           name="Swiping"
           component={SwipingScreen}
