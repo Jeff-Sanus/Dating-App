@@ -1,119 +1,195 @@
-import React, { useState } from 'react';
+// screens/ProfileScreen.js
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Button,
+  Alert,
+  Platform,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
-export default function RegisterScreen() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+export default function ProfileScreen() {
+  const [profile, setProfile]         = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploading, setUploading]       = useState(false);
+  const [message, setMessage]           = useState('');
 
-  // Handle normal signup
-  const handleRegister = async () => {
-    setMessage('');
+  // Fetch profile on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) throw new Error('No token, please log in.');
+        const res = await fetch('http://192.168.1.119:3000/auth/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to load profile');
+        setProfile(await res.json());
+      } catch (e) {
+        Alert.alert('Error', e.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Pick an image
+  const selectImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission required', 'Allow photo access to update your profile pic.');
+        return;
+      }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0]);
+      setMessage('');
+    }
+  };
+
+  // Upload picked image
+  const uploadImage = async () => {
+    if (!selectedImage) {
+      Alert.alert('No image', 'Please select an image first.');
+      return;
+    }
+    setUploading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/signup', {
+      const token = await AsyncStorage.getItem('token');
+      const uri      = selectedImage.uri;
+      const name     = uri.split('/').pop();
+      const match    = /\.(\w+)$/.exec(name);
+      const type     = match ? `image/${match[1]}` : 'image';
+      const formData = new FormData();
+      formData.append('profilePicture', { uri, name, type });
+
+      const res = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to register');
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
       }
-      const data = await response.json();
-      setMessage(`Signup successful! Token: ${data.token}`);
-    } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      const data = await res.json();
+      setProfile(prev => ({ ...prev, profilePic: data.profilePic }));
+      setSelectedImage(null);
+      setMessage('Profile picture updated!');
+    } catch (e) {
+      Alert.alert('Upload Error', e.message);
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Handle login with default account
-  const handleDefaultLogin = async () => {
-    setMessage('');
-    try {
-      const response = await fetch('http://localhost:3000/auth/default', {
-        method: 'GET',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to login with default account');
-      }
-      const data = await response.json();
-      setMessage(`Default user logged in! Token: ${data.token}`);
-      // Optionally store the token in localStorage or sessionStorage
-      // localStorage.setItem('token', data.token);
-    } catch (error) {
-      setMessage(`Error: ${error.message}`);
-    }
-  };
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
 
   return (
-    <div style={styles.container}>
-      <h2>Register</h2>
-      <div style={styles.formGroup}>
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={styles.input}
-        />
-      </div>
-      <div style={styles.formGroup}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={styles.input}
-        />
-      </div>
-      <div style={styles.formGroup}>
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-        />
-      </div>
-      <button onClick={handleRegister} style={styles.button}>
-        Sign Up
-      </button>
+    <View style={styles.container}>
+      {profile ? (
+        <>
+          <Text style={styles.header}>{profile.username}</Text>
+          <Text style={styles.email}>{profile.email}</Text>
 
-      <hr style={{ margin: '20px 0' }} />
+          {profile.profilePic ? (
+            <Image source={{ uri: profile.profilePic }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, styles.placeholder]}>
+              <Text style={{ color: '#666' }}>No Photo</Text>
+            </View>
+          )}
 
-      <button onClick={handleDefaultLogin} style={styles.button}>
-        Login with Default Account
-      </button>
+          <View style={styles.buttons}>
+            <Button title="Select New Photo" onPress={selectImage} />
+          </View>
 
-      {message && <p style={styles.message}>{message}</p>}
-    </div>
+          {selectedImage && (
+            <>
+              <Image source={{ uri: selectedImage.uri }} style={styles.avatarPreview} />
+              <View style={styles.buttons}>
+                <Button
+                  title={uploading ? 'Uploading...' : 'Upload Photo'}
+                  onPress={uploadImage}
+                  disabled={uploading}
+                />
+              </View>
+            </>
+          )}
+
+          {message ? <Text style={styles.message}>{message}</Text> : null}
+        </>
+      ) : (
+        <Text style={styles.message}>No profile data.</Text>
+      )}
+    </View>
   );
 }
 
-// Example inline styling
-const styles = {
+const styles = StyleSheet.create({
+  center: {
+    flex: 1, justifyContent: 'center', alignItems: 'center'
+  },
   container: {
-    width: '400px',
-    margin: '50px auto',
-    textAlign: 'center',
+    flex: 1,
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
   },
-  formGroup: {
-    marginBottom: '10px',
+  header: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 20,
   },
-  input: {
-    width: '100%',
-    padding: '8px',
-    boxSizing: 'border-box',
+  email: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 20,
   },
-  button: {
-    width: '100%',
-    padding: '10px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '16px',
+  avatar: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: '#007bff',
+    marginBottom: 20,
+  },
+  placeholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
+  },
+  avatarPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  buttons: {
+    marginVertical: 10,
+    width: '80%',
   },
   message: {
-    marginTop: '20px',
+    marginTop: 10,
     color: 'green',
   },
-};
+});
