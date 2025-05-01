@@ -51,7 +51,7 @@ export default function ProfileScreen({ navigation }) {
       console.error('[ProfileScreen] fetchProfile error:', e);
       setError(e.message);
     } finally {
-      console.log('[ProfileScreen] fetchProfile end loading false');
+      console.log('[ProfileScreen] fetchProfile end loading - false');
       setLoading(false);
     }
   };
