@@ -6,34 +6,34 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EditBioScreen({ navigation }) {
-  const [bio, setBio]         = useState('');
+  const [bio, setBio] = useState('');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const fetchBio = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const res   = await fetch('http://192.168.1.119:3000/auth/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data  = await res.json();
-      setBio(data.bio || '');
-    } catch (e) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load existing bio
   useEffect(() => {
-    fetchBio();
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const res = await fetch('http://192.168.1.119:3000/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setBio(data.bio || '');
+      } catch (e) {
+        Alert.alert('Error', e.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  // Save bio
   const saveBio = async () => {
     setSaving(true);
     try {
@@ -42,12 +42,12 @@ export default function EditBioScreen({ navigation }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ bio })
+        body: JSON.stringify({ bio }),
       });
       if (!res.ok) throw new Error('Failed to save bio');
-      Alert.alert('Success', 'Bio updated');
+      Alert.alert('Saved', 'Your bio has been updated.');
       navigation.navigate('ViewProfile');
     } catch (e) {
       Alert.alert('Error', e.message);
@@ -57,7 +57,7 @@ export default function EditBioScreen({ navigation }) {
   };
 
   if (loading) {
-    return <ActivityIndicator style={styles.center} />;
+    return <ActivityIndicator style={styles.center} size="large" />;
   }
 
   return (
@@ -88,6 +88,6 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 100,
     textAlignVertical: 'top',
-    marginBottom: 20
+    marginBottom: 20,
   },
 });

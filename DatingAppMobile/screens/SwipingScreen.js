@@ -5,17 +5,16 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Button
+  Button,
 } from 'react-native';
 
 export default function SwipingScreen() {
-  const [cards, setCards]       = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [cards, setCards]           = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Dummy fetch for swipeable “cards”
+  // Dummy data loader
   useEffect(() => {
-    // Replace with real API call:
     setTimeout(() => {
       setCards([
         { id: '1', name: 'Alice' },
@@ -27,12 +26,12 @@ export default function SwipingScreen() {
   }, []);
 
   const handleSwipe = (direction) => {
-    console.log(`Swiped ${direction} on`, cards[currentIndex]);
-    setCurrentIndex(i => i + 1);
+    console.log(`Swiped ${direction} on ${cards[currentIndex].name}`);
+    setCurrentIndex((i) => i + 1);
   };
 
   if (loading) {
-    return <ActivityIndicator style={styles.center} />;
+    return <ActivityIndicator style={styles.center} size="large" />;
   }
 
   if (currentIndex >= cards.length) {
