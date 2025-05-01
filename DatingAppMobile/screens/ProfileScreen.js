@@ -23,6 +23,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       const token = await AsyncStorage.getItem('token');
       console.log('[ProfileScreen] token:', token);
+      console.log('[ProfileScreen] about to fetch from:', `${baseUrl}/auth/profile`);
       if (!token) throw new Error('No token in storage');
 
       const res = await fetch(`${baseUrl}/auth/profile`, {
