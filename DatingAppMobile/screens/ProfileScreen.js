@@ -26,7 +26,7 @@ export default function ProfileScreen({ navigation }) {
       if (!token) throw new Error('No JWT token in storage');
 
       // 2) Kick off the fetch
-      console.log('[ProfileScreen] about to fetch:', `${baseUrl}/auth/profile`);
+      console.log('[ProfileScreen] about to fetch:', `${baseUrl}`);
       const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
