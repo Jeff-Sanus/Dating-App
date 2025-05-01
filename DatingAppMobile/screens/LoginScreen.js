@@ -1,7 +1,13 @@
 // screens/LoginScreen.js
 import React, { useState } from 'react';
 import {
-  View, TextInput, Button, StyleSheet, Alert,
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,9 +29,7 @@ export default function LoginScreen({ navigation }) {
         throw new Error(err.error || 'Login failed');
       }
       const { token } = await res.json();
-      // Persist token
       await AsyncStorage.setItem('token', token);
-      // Navigate to Profile
       navigation.replace('Profile');
     } catch (e) {
       Alert.alert('Login Error', e.message);
@@ -36,6 +40,8 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Log In</Text>
+      
       <TextInput
         placeholder="Email"
         value={email}
@@ -44,6 +50,7 @@ export default function LoginScreen({ navigation }) {
         keyboardType="email-address"
         style={styles.input}
       />
+
       <TextInput
         placeholder="Password"
         value={password}
@@ -51,16 +58,36 @@ export default function LoginScreen({ navigation }) {
         secureTextEntry
         style={styles.input}
       />
+
       <Button
         title={loading ? 'Logging in…' : 'Log In'}
         onPress={handleLogin}
         disabled={loading}
       />
+
+      <TouchableOpacity
+        style={styles.signupLink}
+        onPress={() => navigation.navigate('Register')}
+      >
+        <Text style={styles.signupText}>
+          Don’t have an account? <Text style={styles.signupButton}>Sign Up</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1, padding:20, justifyContent:'center' },
-  input: { borderWidth:1, borderColor:'#ccc', marginBottom:15, padding:10, borderRadius:5 },
+  container:  { flex:1, padding:20, justifyContent:'center', backgroundColor:'#fff' },
+  title:      { fontSize:24, fontWeight:'bold', textAlign:'center', marginBottom:20 },
+  input:      {
+    borderWidth:1,
+    borderColor:'#ccc',
+    borderRadius:5,
+    padding:10,
+    marginBottom:15
+  },
+  signupLink: { marginTop:20, alignItems:'center' },
+  signupText: { color: '#555' },
+  signupButton: { color: '#007bff', fontWeight: 'bold' }
 });
