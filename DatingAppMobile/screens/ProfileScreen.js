@@ -10,31 +10,57 @@ const baseUrl = Platform.OS === 'android'
   : 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  
+  const [loading, setLoading]   = useState(true);
+  const [profile, setProfile]   = useState(null);
+  const [error, setError]       = useState('');
+
   const fetchProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await fetch(`${baseUrl}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
       const data = await res.json();
       setProfile(data);
     } catch (e) {
-      Alert.alert('Error', e.message);
+      console.error('fetchProfile error:', e);
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchProfile(); }, []);
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   if (loading) {
     return <ActivityIndicator style={styles.center} size="large" />;
   }
 
+  // Guard: if there's an error or profile is null, show retry
+  if (error || !profile) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: 'red', marginBottom: 20 }}>
+          {error || 'Unable to load profile.'}
+        </Text>
+        <Button
+          title="Try Again"
+          onPress={() => {
+            setError('');
+            setLoading(true);
+            fetchProfile();
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Now profile is guaranteed non-null
   return (
     <View style={styles.center}>
       <Text>Welcome, {profile.username}!</Text>
