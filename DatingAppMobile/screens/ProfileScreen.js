@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// <-- hardcode your machine's LAN IP here:
+// Always point at your machine’s LAN IP:
 const baseUrl = 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
@@ -23,9 +23,15 @@ export default function ProfileScreen({ navigation }) {
     try {
       const token = await AsyncStorage.getItem('token');
       console.log('[ProfileScreen] token:', token);
-      console.log('[ProfileScreen] about to fetch from:', `${baseUrl}/auth/profile`);
       if (!token) throw new Error('No token in storage');
 
+      // 1) Ping root to check connectivity
+      console.log('[ProfileScreen] pinging root:', `${baseUrl}/`);
+      const pingRes = await fetch(`${baseUrl}/`);
+      console.log('[ProfileScreen] ping status:', pingRes.status);
+
+      // 2) Fetch protected profile
+      console.log('[ProfileScreen] about to fetch from:', `${baseUrl}/auth/profile`);
       const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -85,7 +91,6 @@ export default function ProfileScreen({ navigation }) {
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
       <Text style={styles.email}>{profile.email}</Text>
 
-      {/* You can add avatar or other profile fields here */}
       <View style={styles.navRow}>
         <Button
           title="View Full Profile"
