@@ -1,75 +1,180 @@
-import React from 'react';
-import { Button } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
-// Import your screens
-import AuthOptionsScreen from './screens/AuthOptionsScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import LoginScreen from './screens/LoginScreen';
-import ProfileScreen from './screens/ProfileScreen';
+export default function ProfileScreen() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState('');
 
-const Stack = createNativeStackNavigator();
+  // Helper to fetch profile
+  const fetchProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('Not logged in');
+      const res = await fetch('http://192.168.1.119:3000/auth/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch profile');
+      const data = await res.json();
+      setProfile(data);
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    }
+  };
 
-export default function App() {
+  // Initial load
+  useEffect(() => {
+    (async () => {
+      await fetchProfile();
+      setLoading(false);
+    })();
+  }, []);
+
+  // Pick image from gallery
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission required', 'Allow photo access.');
+        return;
+      }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0]);
+      setMessage('');
+    }
+  };
+
+  // Upload and save new pic
+  const uploadAndSave = async () => {
+    if (!selectedImage) {
+      Alert.alert('No image', 'Please select an image first.');
+      return;
+    }
+    setUploading(true);
+    setMessage('');
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const uri = selectedImage.uri;
+      const name = uri.split('/').pop();
+      const match = /\.(\w+)$/.exec(name);
+      const type = match ? `image/${match[1]}` : 'image';
+      const formData = new FormData();
+
+      if (Platform.OS === 'web') {
+        const blobRes = await fetch(uri);
+        const blob = await blobRes.blob();
+        formData.append('profilePicture', blob, name);
+      } else {
+        formData.append('profilePicture', { uri, name, type });
+      }
+
+      // 1) upload
+      const uploadRes = await fetch('http://192.168.1.119:3000/upload-profile-picture', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const { profilePic } = await uploadRes.json();
+
+      // 2) save URL
+      const saveRes = await fetch('http://192.168.1.119:3000/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ profilePic }),
+      });
+      if (!saveRes.ok) throw new Error('Save failed');
+
+      // 3) re-fetch
+      await fetchProfile();
+      setSelectedImage(null);
+      setMessage('Profile picture updated!');
+    } catch (e) {
+      Alert.alert('Error', e.message);
+      setMessage(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="AuthOptions">
-        {/* Auth choice screen */}
-        <Stack.Screen
-          name="AuthOptions"
-          component={AuthOptionsScreen}
-          options={({ navigation }) => ({
-            title: 'Welcome',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
+    <View style={styles.container}>
+      <Text style={styles.header}>Welcome, {profile?.username}!</Text>
+      <Text style={styles.email}>{profile?.email}</Text>
 
-        {/* Signup screen */}
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={({ navigation }) => ({
-            title: 'Sign Up',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
+      {profile?.profilePic ? (
+        <Image source={{ uri: profile.profilePic }} style={styles.avatar} />
+      ) : (
+        <View style={[styles.avatar, styles.placeholder]}>
+          <Text style={styles.placeholderText}>No Photo</Text>
+        </View>
+      )}
 
-        {/* Login screen */}
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={({ navigation }) => ({
-            title: 'Log In',
-            headerRight: () => (
-              <Button
-                onPress={() => navigation.navigate('Profile')}
-                title="Profile"
-                color="#007bff"
-              />
-            ),
-          })}
-        />
+      <TouchableOpacity style={styles.button} onPress={pickImage}>
+        <Text style={styles.buttonText}>Select New Photo</Text>
+      </TouchableOpacity>
 
-        {/* Profile screen */}
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ title: 'Your Profile' }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+      {selectedImage && (
+        <>  
+          <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
+          <TouchableOpacity
+            style={[styles.button, uploading && styles.disabled]}
+            onPress={uploadAndSave}
+            disabled={uploading}
+          >
+            <Text style={styles.buttonText}>
+              {uploading ? 'Uploading...' : 'Upload & Save'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {!!message && <Text style={styles.message}>{message}</Text>}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
+  header: { fontSize: 24, fontWeight: 'bold', marginVertical: 10 },
+  email: { fontSize: 16, color: '#666', marginBottom: 20 },
+  avatar: { width: 140, height: 140, borderRadius: 70, marginBottom: 20 },
+  placeholder: { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: '#666' },
+  button: { backgroundColor: '#007bff', padding: 12, borderRadius: 8, marginVertical: 10 },
+  disabled: { backgroundColor: '#aaa' },
+  buttonText: { color: '#fff', fontSize: 16 },
+  preview: { width: 120, height: 120, borderRadius: 60, marginVertical: 10 },
+  message: { marginTop: 10, color: 'green' },
+});

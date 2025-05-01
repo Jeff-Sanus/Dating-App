@@ -1,6 +1,7 @@
 import React from 'react';
+import { Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Import your screens
 import AuthOptionsScreen from './screens/AuthOptionsScreen';
@@ -8,35 +9,61 @@ import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="AuthOptions">
-
-        {/* Screen for choosing between Signup and Login */}
+        {/* Auth choice screen */}
         <Stack.Screen
           name="AuthOptions"
           component={AuthOptionsScreen}
-          options={{ title: 'Welcome' }}
+          options={({ navigation }) => ({
+            title: 'Welcome',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('Profile')}
+                title="Profile"
+                color="#007bff"
+              />
+            ),
+          })}
         />
 
         {/* Signup screen */}
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
-          options={{ title: 'Sign Up' }}
+          options={({ navigation }) => ({
+            title: 'Sign Up',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('Profile')}
+                title="Profile"
+                color="#007bff"
+              />
+            ),
+          })}
         />
 
         {/* Login screen */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ title: 'Log In' }}
+          options={({ navigation }) => ({
+            title: 'Log In',
+            headerRight: () => (
+              <Button
+                onPress={() => navigation.navigate('Profile')}
+                title="Profile"
+                color="#007bff"
+              />
+            ),
+          })}
         />
 
-        {/* Protected profile screen */}
+        {/* Profile screen */}
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
