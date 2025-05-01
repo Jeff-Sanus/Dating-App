@@ -3,7 +3,6 @@ import { Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import AuthOptionsScreen from './screens/AuthOptionsScreen';
 import RegisterScreen    from './screens/RegisterScreen';
 import LoginScreen       from './screens/LoginScreen';
 import ProfileScreen     from './screens/ProfileScreen';
@@ -16,13 +15,7 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="AuthOptions">
-
-        <Stack.Screen
-          name="AuthOptions"
-          component={AuthOptionsScreen}
-          options={{ title: 'Welcome' }}
-        />
+      <Stack.Navigator initialRouteName="Register">
 
         <Stack.Screen
           name="Register"
