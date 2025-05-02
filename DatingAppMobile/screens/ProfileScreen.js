@@ -1,11 +1,12 @@
 // screens/ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ActivityIndicator, Button, StyleSheet, Alert
+  View, Text, ActivityIndicator, Button, StyleSheet
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const baseUrl = 'http://192.168.1.119:3000';  // ← your PC’s LAN IP
+// Always hit your LAN IP in development
+const baseUrl = 'http://192.168.1.119:3000';
 
 export default function ProfileScreen({ navigation }) {
   const [loading, setLoading]   = useState(true);
@@ -17,7 +18,7 @@ export default function ProfileScreen({ navigation }) {
     console.log('[ProfileScreen] about to fetch:', `${baseUrl}/auth/profile`);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('No auth token, please log in again.');
+      if (!token) throw new Error('No auth token—please log in.');
 
       const res = await fetch(`${baseUrl}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -63,6 +64,7 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
+  // profile is now guaranteed non-null
   return (
     <View style={styles.center}>
       <Text style={styles.welcome}>Welcome, {profile.username}!</Text>
